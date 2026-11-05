@@ -6,10 +6,6 @@ import * as guarulhosModule from "../data/mock/planejamentoGuarulhos";
 
 const planejamentoGuarulhos = guarulhosModule.planejamentoGuarulhos;
 
-console.log("MÓDULO GUARULHOS:", guarulhosModule);
-console.log("ARRAY GUARULHOS:", planejamentoGuarulhos);
-console.log("EXECUÇÕES:", execucoesTeste);
-
 describe("KPIs mensais de planejamento", () => {
   it("deve calcular corretamente os indicadores da atividade", () => {
     const resultados = calcularKPIsMensais(
