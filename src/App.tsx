@@ -5,6 +5,7 @@ import Layout from "./components/layout/Layout";
 import Home from "./components/pages/Home";
 import Planejamento from "./components/pages/Planejamento";
 import GestaoPreEmbarque from "./components/pages/GestaoPreEmbarque";
+import EmbarqueInternacional from "./components/pages/EmbarqueInternacional";
 
 export default function App() {
     return (
@@ -43,6 +44,22 @@ export default function App() {
                     <Route
                         path="/gestao-pre-embarque/:local"
                         element={<GestaoPreEmbarque />}
+                    />
+
+                    {/* EMBARQUE INTERNACIONAL */}
+                    <Route
+                        path="/embarque-internacional"
+                        element={
+                            <Navigate
+                                to="/embarque-internacional/guarulhos"
+                                replace
+                            />
+                        }
+                    />
+
+                    <Route
+                        path="/embarque-internacional/:local"
+                        element={<EmbarqueInternacional />}
                     />
                 </Route>
             </Routes>

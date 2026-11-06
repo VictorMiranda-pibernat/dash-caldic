@@ -5,6 +5,7 @@ import {
     RefreshCw,
     ChevronDown,
     ClipboardList,
+    Ship,
 } from "lucide-react";
 
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -15,13 +16,13 @@ interface NavbarProps {
     onRefresh?: () => void;
 }
 
+type Pagina = "planejamento" | "gestao" | "embarque";
+
 export default function Navbar({
     processCount = 0,
     onRefresh,
 }: NavbarProps) {
-    const [dropdownAberto, setDropdownAberto] = useState<
-        "planejamento" | "gestao" | null
-    >(null);
+    const [dropdownAberto, setDropdownAberto] = useState<Pagina | null>(null);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -32,16 +33,17 @@ export default function Navbar({
     const gestaoAtiva =
         location.pathname.startsWith("/gestao-pre-embarque");
 
-    function selecionarUnidade(
-        unidade: string,
-        pagina: "planejamento" | "gestao"
-    ) {
-        const rota =
-            pagina === "planejamento"
-                ? `/planejamento/${unidade}`
-                : `/gestao-pre-embarque/${unidade}`;
+    const embarqueAtivo =
+        location.pathname.startsWith("/embarque-internacional");
 
-        navigate(rota);
+    function selecionarUnidade(unidade: string, pagina: Pagina) {
+        const rotas: Record<Pagina, string> = {
+            planejamento: `/planejamento/${unidade}`,
+            gestao: `/gestao-pre-embarque/${unidade}`,
+            embarque: `/embarque-internacional/${unidade}`,
+        };
+
+        navigate(rotas[pagina]);
         setDropdownAberto(null);
     }
 
@@ -52,11 +54,64 @@ export default function Navbar({
                 : "text-gray-400 hover:bg-[#252731] hover:text-white"
         }`;
 
+    function renderDropdown(pagina: Pagina) {
+        return (
+            <div className="absolute left-0 top-full z-50 mt-2 min-w-[210px] overflow-hidden rounded-md border border-[#292B34] bg-[#181920] py-1 shadow-xl">
+                <button
+                    type="button"
+                    onClick={() => selecionarUnidade("guarulhos", pagina)}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
+                >
+                    Guarulhos
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => selecionarUnidade("santa-catarina", pagina)}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
+                >
+                    Santa Catarina
+                </button>
+            </div>
+        );
+    }
+
+    function renderBotaoMenu(
+        pagina: Pagina,
+        titulo: string,
+        icone: React.ReactNode,
+        ativo: boolean
+    ) {
+        return (
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={() =>
+                        setDropdownAberto(
+                            dropdownAberto === pagina ? null : pagina
+                        )
+                    }
+                    className={classeMenu(ativo)}
+                >
+                    {icone}
+                    {titulo}
+
+                    <ChevronDown
+                        size={16}
+                        className={`transition-transform ${
+                            dropdownAberto === pagina ? "rotate-180" : ""
+                        }`}
+                    />
+                </button>
+
+                {dropdownAberto === pagina && renderDropdown(pagina)}
+            </div>
+        );
+    }
+
     return (
         <header className="flex h-[72px] w-full shrink-0 items-center justify-between border-b border-[#292B34] bg-[#101116] px-8">
-
             <div className="flex h-full items-center gap-3">
-
                 <NavLink
                     to="/"
                     end
@@ -66,119 +121,26 @@ export default function Navbar({
                     Home
                 </NavLink>
 
-                {/* PLANEJAMENTO */}
-                <div className="relative">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setDropdownAberto(
-                                dropdownAberto === "planejamento"
-                                    ? null
-                                    : "planejamento"
-                            )
-                        }
-                        className={classeMenu(planejamentoAtivo)}
-                    >
-                        <Database size={18} />
-                        Planejamento
+                {renderBotaoMenu(
+                    "planejamento",
+                    "Planejamento",
+                    <Database size={18} />,
+                    planejamentoAtivo
+                )}
 
-                        <ChevronDown
-                            size={16}
-                            className={`transition-transform ${
-                                dropdownAberto === "planejamento"
-                                    ? "rotate-180"
-                                    : ""
-                            }`}
-                        />
-                    </button>
+                {renderBotaoMenu(
+                    "gestao",
+                    "Gestão Pré-embarque",
+                    <ClipboardList size={18} />,
+                    gestaoAtiva
+                )}
 
-                    {dropdownAberto === "planejamento" && (
-                        <div className="absolute left-0 top-full z-50 mt-2 min-w-[210px] overflow-hidden rounded-md border border-[#292B34] bg-[#181920] py-1 shadow-xl">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    selecionarUnidade(
-                                        "guarulhos",
-                                        "planejamento"
-                                    )
-                                }
-                                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
-                            >
-                                Guarulhos
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    selecionarUnidade(
-                                        "santa-catarina",
-                                        "planejamento"
-                                    )
-                                }
-                                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
-                            >
-                                Santa Catarina
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* GESTÃO PRÉ-EMBARQUE */}
-                <div className="relative">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setDropdownAberto(
-                                dropdownAberto === "gestao"
-                                    ? null
-                                    : "gestao"
-                            )
-                        }
-                        className={classeMenu(gestaoAtiva)}
-                    >
-                        <ClipboardList size={18} />
-                        Gestão Pré-embarque
-
-                        <ChevronDown
-                            size={16}
-                            className={`transition-transform ${
-                                dropdownAberto === "gestao"
-                                    ? "rotate-180"
-                                    : ""
-                            }`}
-                        />
-                    </button>
-
-                    {dropdownAberto === "gestao" && (
-                        <div className="absolute left-0 top-full z-50 mt-2 min-w-[210px] overflow-hidden rounded-md border border-[#292B34] bg-[#181920] py-1 shadow-xl">
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    selecionarUnidade(
-                                        "guarulhos",
-                                        "gestao"
-                                    )
-                                }
-                                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
-                            >
-                                Guarulhos
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    selecionarUnidade(
-                                        "santa-catarina",
-                                        "gestao"
-                                    )
-                                }
-                                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
-                            >
-                                Santa Catarina
-                            </button>
-                        </div>
-                    )}
-                </div>
+                {renderBotaoMenu(
+                    "embarque",
+                    "Embarque Internacional",
+                    <Ship size={18} />,
+                    embarqueAtivo
+                )}
             </div>
 
             <div className="flex shrink-0 items-center gap-4 pl-4">
