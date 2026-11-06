@@ -1068,7 +1068,7 @@ const atividadesGuarulhos: Omit<AtividadePlanejamento, "atividadeKey">[] = [
   },
 ];
 export const planejamentoGuarulhos: AtividadePlanejamento[] =
-  atividadesGuarulhos.map((atividade, index) => ({
-    ...atividade,
-    atividadeKey: `guarulhos-${index + 1}`,
-  }));
+    atividadesGuarulhos.map((atividade, index) => ({
+        ...atividade,
+        atividadeKey: `guarulhos-${index + 1}`,
+    }));
