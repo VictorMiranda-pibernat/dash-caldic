@@ -9,7 +9,7 @@ import type {
 
 import { usePlanejamento } from "../../hooks/usePlanejamento";
 import { execucoesTeste } from "../data/mock/execucoesTeste";
-import { calcularKPIsMensais } from "../utils/kpiPlanejamento";
+import { calcularKPIsPorPeriodo } from "../utils/kpiPlanejamento";
 
 import { BarChart } from "../charts/BarChart";
 import { PieChart } from "../charts/PieChart";
@@ -19,18 +19,13 @@ const unidadesValidas: Unidade[] = [
     "santa-catarina",
 ];
 
-const meses = [
-    { value: 6, label: "Junho" },
-    { value: 7, label: "Julho" },
-    { value: 8, label: "Agosto" },
-    { value: 9, label: "Setembro" },
-    { value: 10, label: "Outubro" },
-    { value: 11, label: "Novembro" },
-];
 const formatarNumero = (valor: number) =>
     valor.toLocaleString("pt-BR", {
         maximumFractionDigits: 2,
     });
+
+const cardClass =
+    "rounded-xl border border-[#292B34] bg-[#181920] p-5";
 
 export default function Planejamento() {
     const { local } = useParams<{ local: string }>();
@@ -43,7 +38,8 @@ export default function Planejamento() {
         AtividadePlanejamento[]
     >([]);
 
-    const [mes, setMes] = useState(11);
+    const [dataInicio, setDataInicio] = useState("2026-06-01");
+    const [dataFim, setDataFim] = useState("2026-11-30");
     const [modal, setModal] = useState("todos");
 
     const [carregando, setCarregando] = useState(true);
@@ -60,7 +56,11 @@ export default function Planejamento() {
                 const planejamento = await usePlanejamento(unidade);
 
                 if (ativo) {
-                    setAtividades(planejamento.atividades.slice(0, 12));
+                    setAtividades(
+                        unidade === "guarulhos"
+                            ? planejamento.atividades.slice(0, 12)
+                            : planejamento.atividades.slice(0, 11)
+                    );
                 }
             } catch {
                 if (ativo) {
@@ -80,18 +80,31 @@ export default function Planejamento() {
         };
     }, [unidade]);
 
+    const periodoValido =
+        Boolean(dataInicio) &&
+        Boolean(dataFim) &&
+        dataInicio <= dataFim;
+
     const kpis = useMemo(() => {
+        if (!periodoValido) return [];
+
         const execucoesDaUnidade = execucoesTeste.filter(
             (execucao) => execucao.unidade === unidade
         );
 
-        return calcularKPIsMensais(
+        return calcularKPIsPorPeriodo(
             atividades,
             execucoesDaUnidade,
-            2026,
-            mes
+            dataInicio,
+            dataFim
         );
-    }, [atividades, unidade, mes]);
+    }, [
+        atividades,
+        unidade,
+        dataInicio,
+        dataFim,
+        periodoValido,
+    ]);
 
     const kpisFiltrados = useMemo(() => {
         if (modal === "todos") return kpis;
@@ -99,6 +112,59 @@ export default function Planejamento() {
         return kpis.filter((kpi) => kpi.modal === modal);
     }, [kpis, modal]);
 
+    // Consolida os resultados de todos os modais por mês.
+    const dadosMensais = useMemo(() => {
+        const agrupamento = new Map<
+            string,
+            {
+                ano: number;
+                mes: number;
+                mesLabel: string;
+                totalExecucoes: number;
+                dentroPrazo: number;
+                foraPrazo: number;
+                horasAcumuladas: number;
+            }
+        >();
+
+        kpisFiltrados.forEach((kpi) => {
+            const chave = `${kpi.ano}-${kpi.mes}`;
+
+            const atual = agrupamento.get(chave) ?? {
+                ano: kpi.ano,
+                mes: kpi.mes,
+                mesLabel: `${kpi.mesLabel.slice(0, 3)}/${kpi.ano}`,
+                totalExecucoes: 0,
+                dentroPrazo: 0,
+                foraPrazo: 0,
+                horasAcumuladas: 0,
+            };
+
+            atual.totalExecucoes += kpi.totalExecucoes;
+            atual.dentroPrazo += kpi.dentroPrazo;
+            atual.foraPrazo += kpi.foraPrazo;
+            atual.horasAcumuladas +=
+                (kpi.tempoMedioHoras ?? 0) * kpi.totalExecucoes;
+
+            agrupamento.set(chave, atual);
+        });
+
+        return Array.from(agrupamento.values())
+            .sort((a, b) => a.ano - b.ano || a.mes - b.mes)
+            .map((item) => ({
+                ...item,
+                aderencia:
+                    item.totalExecucoes > 0
+                        ? (item.dentroPrazo / item.totalExecucoes) * 100
+                        : 0,
+                tempoMedio:
+                    item.totalExecucoes > 0
+                        ? item.horasAcumuladas / item.totalExecucoes
+                        : 0,
+            }));
+    }, [kpisFiltrados]);
+
+    // Consolida os indicadores gerais do período selecionado.
     const resumo = useMemo(() => {
         const totalExecucoes = kpisFiltrados.reduce(
             (total, kpi) => total + kpi.totalExecucoes,
@@ -137,86 +203,79 @@ export default function Planejamento() {
         };
     }, [kpisFiltrados]);
 
-    const dadosPorEtapa = useMemo(() => {
-        const agrupamento = new Map<
-            string,
-            {
-                etapa: string;
-                execucoes: number;
-                dentroPrazo: number;
-                foraPrazo: number;
-                horasAcumuladas: number;
-            }
-        >();
-
-        kpisFiltrados.forEach((kpi) => {
-            const atual = agrupamento.get(kpi.etapa) ?? {
-                etapa: kpi.etapa,
-                execucoes: 0,
-                dentroPrazo: 0,
-                foraPrazo: 0,
-                horasAcumuladas: 0,
-            };
-
-            atual.execucoes += kpi.totalExecucoes;
-            atual.dentroPrazo += kpi.dentroPrazo;
-            atual.foraPrazo += kpi.foraPrazo;
-            atual.horasAcumuladas +=
-                (kpi.tempoMedioHoras ?? 0) * kpi.totalExecucoes;
-
-            agrupamento.set(kpi.etapa, atual);
-        });
-
-        return Array.from(agrupamento.values()).map((item) => ({
-            ...item,
-            aderencia:
-                item.execucoes > 0
-                    ? (item.dentroPrazo / item.execucoes) * 100
-                    : 0,
-            tempoMedio:
-                item.execucoes > 0
-                    ? item.horasAcumuladas / item.execucoes
-                    : 0,
-        }));
-    }, [kpisFiltrados]);
+    // Prepara a evolução mensal de cada atividade.
     const dadosPorAtividade = useMemo(() => {
-        const agrupamento = new Map<
-            string,
-            {
-                atividadeKey: string;
-                atividade: string;
-                etapa: string;
-                dentroPrazo: number;
-                foraPrazo: number;
-                totalExecucoes: number;
-            }
-        >();
+        return atividades.map((atividade) => {
+            const dadosDaAtividade = kpisFiltrados.filter(
+                (kpi) => kpi.atividadeKey === atividade.atividadeKey
+            );
 
-        kpisFiltrados.forEach((kpi) => {
-            const atual = agrupamento.get(kpi.atividadeKey) ?? {
-                atividadeKey: kpi.atividadeKey,
-                atividade: kpi.atividade,
-                etapa: kpi.etapa,
-                dentroPrazo: 0,
-                foraPrazo: 0,
-                totalExecucoes: 0,
+            const agrupamento = new Map<
+                string,
+                {
+                    ano: number;
+                    mes: number;
+                    mesLabel: string;
+                    dentroPrazo: number;
+                    foraPrazo: number;
+                    totalExecucoes: number;
+                    horasAcumuladas: number;
+                }
+            >();
+
+            dadosDaAtividade.forEach((kpi) => {
+                const chave = `${kpi.ano}-${kpi.mes}`;
+
+                const atual = agrupamento.get(chave) ?? {
+                    ano: kpi.ano,
+                    mes: kpi.mes,
+                    mesLabel: `${kpi.mesLabel.slice(0, 3)}/${kpi.ano}`,
+                    dentroPrazo: 0,
+                    foraPrazo: 0,
+                    totalExecucoes: 0,
+                    horasAcumuladas: 0,
+                };
+
+                atual.dentroPrazo += kpi.dentroPrazo;
+                atual.foraPrazo += kpi.foraPrazo;
+                atual.totalExecucoes += kpi.totalExecucoes;
+                atual.horasAcumuladas +=
+                    (kpi.tempoMedioHoras ?? 0) * kpi.totalExecucoes;
+
+                agrupamento.set(chave, atual);
+            });
+
+            const dados = Array.from(agrupamento.values())
+                .sort((a, b) => a.ano - b.ano || a.mes - b.mes)
+                .map((item) => ({
+                    ...item,
+                    aderencia:
+                        item.totalExecucoes > 0
+                            ? (item.dentroPrazo / item.totalExecucoes) * 100
+                            : 0,
+                    tempoMedio:
+                        item.totalExecucoes > 0
+                            ? item.horasAcumuladas / item.totalExecucoes
+                            : 0,
+                }));
+
+            return {
+                atividadeKey: atividade.atividadeKey,
+                atividade: atividade.atividade,
+                etapa: atividade.etapa,
+                dados,
             };
-
-            atual.dentroPrazo += kpi.dentroPrazo;
-            atual.foraPrazo += kpi.foraPrazo;
-            atual.totalExecucoes += kpi.totalExecucoes;
-
-            agrupamento.set(kpi.atividadeKey, atual);
         });
+    }, [atividades, kpisFiltrados]);
 
-        return Array.from(agrupamento.values());
-    }, [kpisFiltrados]);
+    const etapas = useMemo(() => {
+        return Array.from(
+            new Set(atividades.map((atividade) => atividade.etapa))
+        );
+    }, [atividades]);
 
     const nomeUnidade =
         unidade === "guarulhos" ? "Guarulhos" : "Santa Catarina";
-
-    const cardClass =
-        "rounded-xl border border-[#292B34] bg-[#181920] p-5";
 
     return (
         <main className="space-y-6 p-6 md:p-8">
@@ -230,7 +289,8 @@ export default function Planejamento() {
                 </h1>
 
                 <p className="mt-2 text-sm text-gray-400">
-                    Indicadores de desempenho, acompanhamento de SLAs e eficiência operacional.
+                    Evolução mensal dos indicadores de desempenho,
+                    acompanhamento de SLAs e eficiência operacional.
                 </p>
             </header>
 
@@ -247,23 +307,37 @@ export default function Planejamento() {
             ) : (
                 <>
                     {/* FILTROS */}
-                    <section className={`${cardClass} flex flex-wrap items-center gap-4`}>
+                    <section className={`${cardClass} flex flex-wrap items-end gap-4`}>
                         <div className="flex flex-col gap-2">
                             <label className="text-xs text-gray-400">
-                                Mês KPI
+                                Data inicial
                             </label>
 
-                            <select
-                                value={mes}
-                                onChange={(event) => setMes(Number(event.target.value))}
-                                className="min-w-36 rounded-lg border border-[#292B34] bg-[#20212A] px-3 py-2 text-sm text-white"
-                            >
-                                {meses.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label} / 2026
-                                    </option>
-                                ))}
-                            </select>
+                            <input
+                                type="date"
+                                value={dataInicio}
+                                max={dataFim || undefined}
+                                onChange={(event) =>
+                                    setDataInicio(event.target.value)
+                                }
+                                className="rounded-lg border border-[#292B34] bg-[#20212A] px-3 py-2 text-sm text-white"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs text-gray-400">
+                                Data final
+                            </label>
+
+                            <input
+                                type="date"
+                                value={dataFim}
+                                min={dataInicio || undefined}
+                                onChange={(event) =>
+                                    setDataFim(event.target.value)
+                                }
+                                className="rounded-lg border border-[#292B34] bg-[#20212A] px-3 py-2 text-sm text-white"
+                            />
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -273,7 +347,9 @@ export default function Planejamento() {
 
                             <select
                                 value={modal}
-                                onChange={(event) => setModal(event.target.value)}
+                                onChange={(event) =>
+                                    setModal(event.target.value)
+                                }
                                 className="min-w-44 rounded-lg border border-[#292B34] bg-[#20212A] px-3 py-2 text-sm text-white"
                             >
                                 <option value="todos">Todos os modais</option>
@@ -290,243 +366,188 @@ export default function Planejamento() {
                         </div>
                     </section>
 
-                    {/* CARDS DE KPI */}
-                    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <div className={cardClass}>
-                            <p className="text-sm text-gray-400">
-                                Total de execuções
-                            </p>
-                            <p className="mt-3 text-3xl font-semibold text-white">
-                                {formatarNumero(resumo.totalExecucoes)}
-                            </p>
-                            <p className="mt-2 text-xs text-gray-500">
-                                Execuções concluídas no período
-                            </p>
+                    {!periodoValido ? (
+                        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+                            A data inicial deve ser anterior ou igual à data final.
                         </div>
+                    ) : (
+                        <>
+                            {/* INDICADORES GERAIS */}
+                            <section>
+                                <div className="mb-4">
+                                    <h2 className="text-lg font-semibold text-white">
+                                        Indicadores gerais
+                                    </h2>
 
-                        <div className={cardClass}>
-                            <p className="text-sm text-gray-400">
-                                Dentro do SLA
-                            </p>
-                            <p className="mt-3 text-3xl font-semibold text-white">
-                                {formatarNumero(resumo.dentroPrazo)}
-                            </p>
-                            <p className="mt-2 text-xs text-gray-500">
-                                Execuções dentro do prazo definido
-                            </p>
-                        </div>
+                                    <p className="mt-1 text-sm text-gray-400">
+                                        Evolução mensal dos resultados no período selecionado.
+                                    </p>
+                                </div>
 
-                        <div className={cardClass}>
-                            <p className="text-sm text-gray-400">
-                                Fora do SLA
-                            </p>
-                            <p className="mt-3 text-3xl font-semibold text-white">
-                                {formatarNumero(resumo.foraPrazo)}
-                            </p>
-                            <p className="mt-2 text-xs text-gray-500">
-                                Execuções acima do prazo definido
-                            </p>
-                        </div>
+                                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                                    <div className={cardClass}>
+                                        <h3 className="mb-5 text-base font-semibold text-white">
+                                            Total de execuções por mês
+                                        </h3>
 
-                        <div className={cardClass}>
-                            <p className="text-sm text-gray-400">
-                                Aderência ao SLA
-                            </p>
-                            <p className="mt-3 text-3xl font-semibold text-white">
+                                        <BarChart
+                                            data={dadosMensais}
+                                            dataKey="totalExecucoes"
+                                            xAxisKey="mesLabel"
+                                            color="#3988D8"
+                                            height={300}
+                                        />
+                                    </div>
+
+                                    <div className={cardClass}>
+                                        <h3 className="mb-5 text-base font-semibold text-white">
+                                            Execuções dentro e fora do SLA
+                                        </h3>
+
+                                        <BarChart
+                                            data={dadosMensais}
+                                            xAxisKey="mesLabel"
+                                            height={300}
+                                            series={[
+                                                {
+                                                    dataKey: "dentroPrazo",
+                                                    label: "Dentro do SLA",
+                                                    color: "#22C55E",
+                                                },
+                                                {
+                                                    dataKey: "foraPrazo",
+                                                    label: "Fora do SLA",
+                                                    color: "#EF4444",
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+
+                                    <div className={cardClass}>
+                                        <h3 className="mb-5 text-base font-semibold text-white">
+                                            Aderência ao SLA por mês (%)
+                                        </h3>
+
+                                        <BarChart
+                                            data={dadosMensais}
+                                            dataKey="aderencia"
+                                            xAxisKey="mesLabel"
+                                            color="#22C55E"
+                                            height={300}
+                                        />
+                                    </div>
+
+                                    <div className={cardClass}>
+                                        <h3 className="mb-5 text-base font-semibold text-white">
+                                            Tempo médio de execução por mês (horas)
+                                        </h3>
+
+                                        <BarChart
+                                            data={dadosMensais}
+                                            dataKey="tempoMedio"
+                                            xAxisKey="mesLabel"
+                                            color="#3988D8"
+                                            height={300}
+                                        />
+                                    </div>
+
+                                    <div className={`${cardClass} xl:col-span-2`}>
+                                        <h3 className="mb-5 text-base font-semibold text-white">
+                                            Distribuição geral das execuções por SLA
+                                        </h3>
+
+                                        <PieChart
+                                            data={[
+                                                {
+                                                    name: "Dentro do SLA",
+                                                    value: resumo.dentroPrazo,
+                                                },
+                                                {
+                                                    name: "Fora do SLA",
+                                                    value: resumo.foraPrazo,
+                                                },
+                                            ]}
+                                            colors={["#22C55E", "#EF4444"]}
+                                            height={300}
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* DESEMPENHO POR ATIVIDADE */}
+                            <section className="space-y-6">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        Desempenho por atividade
+                                    </h2>
+
+                                    <p className="mt-1 text-sm text-gray-400">
+                                        Evolução mensal das execuções dentro e fora do SLA para cada atividade.
+                                    </p>
+                                </div>
+
+                                {etapas.map((etapa) => {
+                                    const atividadesDaEtapa =
+                                        dadosPorAtividade.filter(
+                                            (item) => item.etapa === etapa
+                                        );
+
+                                    return (
+                                        <div key={etapa} className="space-y-4">
+                                            <h3 className="border-b border-[#292B34] pb-3 text-base font-semibold text-gray-200">
+                                                {etapa}
+                                            </h3>
+
+                                            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                                                {atividadesDaEtapa.map((item) => (
+                                                    <div
+                                                        key={item.atividadeKey}
+                                                        className={cardClass}
+                                                    >
+                                                        <h4 className="mb-4 text-sm font-semibold text-white">
+                                                            {item.atividade}
+                                                        </h4>
+
+                                                        <BarChart
+                                                            data={item.dados}
+                                                            xAxisKey="mesLabel"
+                                                            height={240}
+                                                            series={[
+                                                                {
+                                                                    dataKey: "dentroPrazo",
+                                                                    label: "Dentro do SLA",
+                                                                    color: "#22C55E",
+                                                                },
+                                                                {
+                                                                    dataKey: "foraPrazo",
+                                                                    label: "Fora do SLA",
+                                                                    color: "#EF4444",
+                                                                },
+                                                            ]}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </section>
+
+                            <p className="text-right text-xs text-gray-500">
+                                {formatarNumero(resumo.totalExecucoes)} execuções no período
+                                {" · "}
+                                Aderência geral:{" "}
                                 {resumo.aderencia === null
                                     ? "—"
                                     : `${formatarNumero(resumo.aderencia)}%`}
+                                {" · "}
+                                Tempo médio:{" "}
+                                {resumo.tempoMedio === null
+                                    ? "—"
+                                    : `${formatarNumero(resumo.tempoMedio)} horas`}
                             </p>
-                            <p className="mt-2 text-xs text-gray-500">
-                                Percentual de execuções dentro do SLA
-                            </p>
-                        </div>
-                    </section>
-
-                    {/* GRÁFICOS */}
-                    <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                        <div className={cardClass}>
-                            <h2 className="mb-5 text-base font-semibold text-white">
-                                Volume de execuções por etapa
-                            </h2>
-
-                            <BarChart
-                                data={dadosPorEtapa}
-                                dataKey="execucoes"
-                                xAxisKey="etapa"
-                                color="#3988D8"
-                                height={320}
-                            />
-                        </div>
-
-                        <div className={cardClass}>
-                            <h2 className="mb-5 text-base font-semibold text-white">
-                                Distribuição de execuções por SLA
-                            </h2>
-
-                            <PieChart
-                                data={[
-                                    {
-                                        name: "Dentro do SLA",
-                                        value: resumo.dentroPrazo,
-                                    },
-                                    {
-                                        name: "Fora do SLA",
-                                        value: resumo.foraPrazo,
-                                    },
-                                ]}
-                                colors={["#22C55E", "#EF4444"]}
-                                height={320}
-                            />
-                        </div>
-
-                        <div className={cardClass}>
-                            <h2 className="mb-5 text-base font-semibold text-white">
-                                Aderência ao SLA por etapa
-                            </h2>
-
-                            <BarChart
-                                data={dadosPorEtapa}
-                                dataKey="aderencia"
-                                xAxisKey="etapa"
-                                color="#3988D8"
-                                height={320}
-                            />
-                        </div>
-
-                        <div className={cardClass}>
-                            <h2 className="mb-5 text-base font-semibold text-white">
-                                Tempo médio de execução por etapa
-                            </h2>
-
-                            <BarChart
-                                data={dadosPorEtapa}
-                                dataKey="tempoMedio"
-                                xAxisKey="etapa"
-                                color="#3988D8"
-                                height={320}
-                            />
-                        </div>
-                    </section>
-
-                    {/* GRÁFICOS INDIVIDUAIS POR ATIVIDADE */}
-                    <section className="space-y-6">
-                        <div>
-                            <h2 className="text-xl font-semibold text-white">
-                                Desempenho por atividade
-                            </h2>
-
-                            <p className="mt-1 text-sm text-gray-400">
-                                Comparativo de execuções dentro e fora do SLA, agrupado por etapa.
-                            </p>
-                        </div>
-
-                        {atividades.reduce<string[]>((etapas, atividade) => {
-                            if (!etapas.includes(atividade.etapa)) {
-                                etapas.push(atividade.etapa);
-                            }
-
-                            return etapas;
-                        }, []).map((etapa) => {
-                            const atividadesDaEtapa = dadosPorAtividade.filter(
-                                (item) => item.etapa === etapa
-                            );
-
-                            return (
-                                <div key={etapa} className="space-y-4">
-                                    <h3 className="border-b border-[#292B34] pb-3 text-base font-semibold text-gray-200">
-                                        {etapa}
-                                    </h3>
-
-                                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-                                        {atividadesDaEtapa.map((item) => (
-                                            <div
-                                                key={item.atividadeKey}
-                                                className={cardClass}
-                                            >
-                                                <h4 className="mb-2 min-h-10 text-sm font-medium text-white">
-                                                    {item.atividade}
-                                                </h4>
-
-                                                <div className="mb-4 flex flex-wrap gap-4 text-xs">
-                                                    <span className="text-gray-400">
-                                                        Total: {formatarNumero(item.totalExecucoes)}
-                                                    </span>
-
-                                                    <span className="text-green-400">
-                                                        Dentro: {formatarNumero(item.dentroPrazo)}
-                                                    </span>
-
-                                                    <span className="text-red-400">
-                                                        Fora: {formatarNumero(item.foraPrazo)}
-                                                    </span>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div className="rounded-lg bg-[#20212A] p-3">
-                                                        <p className="text-xs text-gray-400">
-                                                            Dentro do SLA
-                                                        </p>
-                                                        <p className="mt-1 text-xl font-semibold text-green-400">
-                                                            {formatarNumero(item.dentroPrazo)}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="rounded-lg bg-[#20212A] p-3">
-                                                        <p className="text-xs text-gray-400">
-                                                            Fora do SLA
-                                                        </p>
-                                                        <p className="mt-1 text-xl font-semibold text-red-400">
-                                                            {formatarNumero(item.foraPrazo)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#292B34]">
-                                                    <div className="flex h-full w-full">
-                                                        <div
-                                                            className="h-full bg-[#22C55E]"
-                                                            style={{
-                                                                width: `${item.totalExecucoes > 0
-                                                                        ? (item.dentroPrazo / item.totalExecucoes) * 100
-                                                                        : 0
-                                                                    }%`,
-                                                            }}
-                                                        />
-
-                                                        <div
-                                                            className="h-full bg-[#EF4444]"
-                                                            style={{
-                                                                width: `${item.totalExecucoes > 0
-                                                                        ? (item.foraPrazo / item.totalExecucoes) * 100
-                                                                        : 0
-                                                                    }%`,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <p className="mt-2 text-right text-xs text-gray-500">
-                                                    {item.totalExecucoes > 0
-                                                        ? `${formatarNumero(
-                                                            (item.dentroPrazo / item.totalExecucoes) * 100
-                                                        )}% de aderência`
-                                                        : "Sem execuções no período"}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </section>
-
-                    <p className="text-right text-xs text-gray-500">
-                        Tempo médio geral:{" "}
-                        {resumo.tempoMedio === null
-                            ? "—"
-                            : `${formatarNumero(resumo.tempoMedio)} horas`}
-                    </p>
+                        </>
+                    )}
                 </>
             )}
         </main>

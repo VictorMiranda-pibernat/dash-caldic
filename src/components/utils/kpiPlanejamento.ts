@@ -1,133 +1,194 @@
 
 import type {
-  AtividadePlanejamento,
-  ExecucaoAtividade,
-  ModalTransporte,
+    AtividadePlanejamento,
+    ExecucaoAtividade,
+    ModalTransporte,
 } from "../types/planejamento";
 
 export interface ResultadoKPI {
-  atividadeId: number;
-  atividadeKey: string;
-  etapa: string;
-  atividade: string;
-  modal: ModalTransporte | null;
-  slaHoras: number;
-  totalExecucoes: number;
-  dentroPrazo: number;
-  foraPrazo: number;
-  tempoMedioHoras: number | null;
-  aderenciaPercentual: number | null;
+    atividadeId: number;
+    atividadeKey: string;
+    etapa: string;
+    atividade: string;
+    modal: ModalTransporte;
+    ano: number;
+    mes: number;
+    mesLabel: string;
+    slaHoras: number;
+    totalExecucoes: number;
+    dentroPrazo: number;
+    foraPrazo: number;
+    tempoMedioHoras: number | null;
+    aderenciaPercentual: number | null;
 }
 
-export function calcularKPIsMensais(
-  atividades: AtividadePlanejamento[],
-  execucoes: ExecucaoAtividade[],
-  ano: number,
-  mes: number
-): ResultadoKPI[] {
-  if (mes < 1 || mes > 12) {
-    throw new Error("O mês deve estar entre 1 e 12.");
-  }
+const modais: ModalTransporte[] = [
+    "aereo",
+    "maritimo",
+    "rodoviario",
+];
 
-  return atividades.map((atividade) => {
-    const execucoesDaAtividade = execucoes.filter((execucao) => {
-      if (execucao.atividadeKey !== atividade.atividadeKey) return false;
-      if (!execucao.dataInicio || !execucao.dataConclusao) return false;
+const nomesMeses = [
+    "Janeiro", "Fevereiro", "Março", "Abril",
+    "Maio", "Junho", "Julho", "Agosto",
+    "Setembro", "Outubro", "Novembro", "Dezembro",
+];
 
-      const conclusao = new Date(execucao.dataConclusao);
-
-      if (Number.isNaN(conclusao.getTime())) return false;
-
-      return (
-        conclusao.getUTCFullYear() === ano &&
-        conclusao.getUTCMonth() + 1 === mes
-      );
-    });
-
-    const grupos = new Map<
-      ModalTransporte | "geral",
-      ExecucaoAtividade[]
-    >();
-
-    execucoesDaAtividade.forEach((execucao) => {
-      const chave = execucao.modal ?? "geral";
-
-      if (!grupos.has(chave)) {
-        grupos.set(chave, []);
-      }
-
-      grupos.get(chave)!.push(execucao);
-    });
-
-    if (grupos.size === 0) {
-      grupos.set("geral", []);
+function converterDataLocal(data: string): Date {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+        const [ano, mes, dia] = data.split("-").map(Number);
+        return new Date(ano, mes - 1, dia);
     }
 
-    return Array.from(grupos.entries()).map(
-      ([modal, execucoesDoGrupo]) => {
-        const slaHoras =
-          modal !== "geral" && atividade.targetsPorModal
-            ? atividade.targetsPorModal[modal].horas
-            : atividade.prazoHoras;
+    return new Date(data);
+}
 
-        let totalHoras = 0;
-        let dentroPrazo = 0;
-        let foraPrazo = 0;
-        let totalValidas = 0;
+export function calcularKPIsPorPeriodo(
+    atividades: AtividadePlanejamento[],
+    execucoes: ExecucaoAtividade[],
+    dataInicio: string,
+    dataFim: string
+): ResultadoKPI[] {
+    const inicioPeriodo = converterDataLocal(dataInicio);
+    const fimPeriodo = converterDataLocal(dataFim);
 
-        execucoesDoGrupo.forEach((execucao) => {
-          const inicio = new Date(execucao.dataInicio);
-          const conclusao = new Date(execucao.dataConclusao);
+    if (
+        Number.isNaN(inicioPeriodo.getTime()) ||
+        Number.isNaN(fimPeriodo.getTime()) ||
+        inicioPeriodo > fimPeriodo
+    ) {
+        throw new Error("Período de datas inválido.");
+    }
 
-          if (
-            Number.isNaN(inicio.getTime()) ||
-            Number.isNaN(conclusao.getTime()) ||
-            conclusao.getTime() < inicio.getTime()
-          ) {
-            return;
-          }
+    const fimExclusivo = new Date(fimPeriodo);
+    fimExclusivo.setDate(fimExclusivo.getDate() + 1);
 
-          const duracaoHoras =
-            (conclusao.getTime() - inicio.getTime()) /
-            (1000 * 60 * 60);
+    const mesesPeriodo: { ano: number; mes: number }[] = [];
 
-          const target =
-            execucao.modal && atividade.targetsPorModal
-              ? atividade.targetsPorModal[execucao.modal].horas
-              : atividade.prazoHoras;
+    const cursor = new Date(
+        inicioPeriodo.getFullYear(),
+        inicioPeriodo.getMonth(),
+        1
+    );
 
-          totalHoras += duracaoHoras;
-          totalValidas++;
+    const ultimoMes = new Date(
+        fimPeriodo.getFullYear(),
+        fimPeriodo.getMonth(),
+        1
+    );
 
-          if (duracaoHoras <= target) {
-            dentroPrazo++;
-          } else {
-            foraPrazo++;
-          }
+    while (cursor <= ultimoMes) {
+        mesesPeriodo.push({
+            ano: cursor.getFullYear(),
+            mes: cursor.getMonth() + 1,
         });
 
-        return {
-          atividadeId: atividade.id,
-          atividadeKey: atividade.atividadeKey,
-          etapa: atividade.etapa,
-          atividade: atividade.atividade,
-          modal: modal === "geral" ? null : modal,
-          slaHoras,
-          totalExecucoes: totalValidas,
-          dentroPrazo,
-          foraPrazo,
-          tempoMedioHoras:
-            totalValidas > 0
-              ? Number((totalHoras / totalValidas).toFixed(2))
-              : null,
-          aderenciaPercentual:
-            totalValidas > 0
-              ? Number(
-                  ((dentroPrazo / totalValidas) * 100).toFixed(2)
-                )
-              : null,
-        };
-      }
-    );
-  }).flat();
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    const execucoesValidas = execucoes.filter((execucao) => {
+        if (!execucao.dataInicio || !execucao.dataConclusao) {
+            return false;
+        }
+
+        const inicio = converterDataLocal(execucao.dataInicio);
+        const conclusao = converterDataLocal(execucao.dataConclusao);
+
+        return (
+            !Number.isNaN(inicio.getTime()) &&
+            !Number.isNaN(conclusao.getTime()) &&
+            conclusao >= inicio &&
+            conclusao >= inicioPeriodo &&
+            conclusao < fimExclusivo
+        );
+    });
+
+    const resultados: ResultadoKPI[] = [];
+
+    atividades.forEach((atividade) => {
+        mesesPeriodo.forEach(({ ano, mes }) => {
+            modais.forEach((modal) => {
+                const execucoesDoGrupo = execucoesValidas.filter(
+                    (execucao) => {
+                        if (
+                            execucao.atividadeKey !== atividade.atividadeKey ||
+                            execucao.modal !== modal
+                        ) {
+                            return false;
+                        }
+
+                        const conclusao = converterDataLocal(
+                            execucao.dataConclusao
+                        );
+
+                        return (
+                            conclusao.getFullYear() === ano &&
+                            conclusao.getMonth() + 1 === mes
+                        );
+                    }
+                );
+
+                const slaHoras =
+                    atividade.targetsPorModal?.[modal].horas ??
+                    atividade.prazoHoras;
+
+                let totalHoras = 0;
+                let dentroPrazo = 0;
+                let foraPrazo = 0;
+
+                execucoesDoGrupo.forEach((execucao) => {
+                    const inicio = converterDataLocal(execucao.dataInicio);
+                    const conclusao = converterDataLocal(
+                        execucao.dataConclusao
+                    );
+
+                    const duracaoHoras =
+                        (conclusao.getTime() - inicio.getTime()) /
+                        (1000 * 60 * 60);
+
+                    totalHoras += duracaoHoras;
+
+                    if (duracaoHoras <= slaHoras) {
+                        dentroPrazo++;
+                    } else {
+                        foraPrazo++;
+                    }
+                });
+
+                const totalExecucoes = dentroPrazo + foraPrazo;
+
+                resultados.push({
+                    atividadeId: atividade.id,
+                    atividadeKey: atividade.atividadeKey,
+                    etapa: atividade.etapa,
+                    atividade: atividade.atividade,
+                    modal,
+                    ano,
+                    mes,
+                    mesLabel: nomesMeses[mes - 1],
+                    slaHoras,
+                    totalExecucoes,
+                    dentroPrazo,
+                    foraPrazo,
+                    tempoMedioHoras:
+                        totalExecucoes > 0
+                            ? Number(
+                                (totalHoras / totalExecucoes).toFixed(2)
+                            )
+                            : null,
+                    aderenciaPercentual:
+                        totalExecucoes > 0
+                            ? Number(
+                                (
+                                    (dentroPrazo / totalExecucoes) *
+                                    100
+                                ).toFixed(2)
+                            )
+                            : null,
+                });
+            });
+        });
+    });
+
+    return resultados;
 }
