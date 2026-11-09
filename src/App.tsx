@@ -7,6 +7,7 @@ import Planejamento from "./components/pages/Planejamento";
 import GestaoPreEmbarque from "./components/pages/GestaoPreEmbarque";
 import EmbarqueInternacional from "./components/pages/EmbarqueInternacional";
 import PosEmbarque from "./components/pages/PosEmbarque";
+import ChegadaBrasil from "./components/pages/ChegadaBrasil";
 
 export default function App() {
     return (
@@ -71,6 +72,21 @@ export default function App() {
                     <Route
                         path="/pos-embarque/:local"
                         element={<PosEmbarque />}
+                    />
+                    {/* CHEGADA DA CARGA NO BRASIL */}
+                    <Route
+                        path="/chegada-brasil"
+                        element={
+                            <Navigate
+                                to="/chegada-brasil/guarulhos"
+                                replace
+                            />
+                        }
+                    />
+
+                    <Route
+                        path="/chegada-brasil/:local"
+                        element={<ChegadaBrasil />}
                     />
                 </Route>
             </Routes>

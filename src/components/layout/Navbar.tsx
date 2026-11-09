@@ -7,6 +7,7 @@ import {
     ClipboardList,
     Ship,
     PackageCheck,
+    Anchor,
 } from "lucide-react";
 
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -21,7 +22,8 @@ type Pagina =
     | "planejamento"
     | "gestao"
     | "embarque"
-    | "posEmbarque";
+    | "posEmbarque"
+    | "chegadaBrasil";
 
 export default function Navbar({
     processCount = 0,
@@ -45,12 +47,16 @@ export default function Navbar({
     const posEmbarqueAtivo =
         location.pathname.startsWith("/pos-embarque");
 
+    const chegadaBrasilAtiva =
+        location.pathname.startsWith("/chegada-brasil");
+
     function selecionarUnidade(unidade: string, pagina: Pagina) {
         const rotas: Record<Pagina, string> = {
             planejamento: `/planejamento/${unidade}`,
             gestao: `/gestao-pre-embarque/${unidade}`,
             embarque: `/embarque-internacional/${unidade}`,
             posEmbarque: `/pos-embarque/${unidade}`,
+            chegadaBrasil: `/chegada-brasil/${unidade}`,
         };
 
         navigate(rotas[pagina]);
@@ -58,11 +64,11 @@ export default function Navbar({
     }
 
     const classeMenu = (ativo: boolean) =>
-        `flex items-center gap-3 rounded-md px-4 py-3 text-base whitespace-nowrap transition ${
-            ativo
-                ? "bg-[#343640] font-semibold text-white"
-                : "text-gray-400 hover:bg-[#252731] hover:text-white"
-        }`;
+    `flex items-center gap-1.5 rounded-md px-2 py-2 text-[12px] whitespace-nowrap transition ${
+        ativo
+            ? "bg-[#343640] font-semibold text-white"
+            : "text-gray-400 hover:bg-[#252731] hover:text-white"
+    }`;
 
     function renderDropdown(pagina: Pagina) {
         return (
@@ -112,9 +118,8 @@ export default function Navbar({
 
                     <ChevronDown
                         size={16}
-                        className={`transition-transform ${
-                            dropdownAberto === pagina ? "rotate-180" : ""
-                        }`}
+                        className={`transition-transform ${dropdownAberto === pagina ? "rotate-180" : ""
+                            }`}
                     />
                 </button>
 
@@ -125,50 +130,57 @@ export default function Navbar({
     }
 
     return (
-        <header className="flex h-[72px] w-full shrink-0 items-center justify-between border-b border-[#292B34] bg-[#101116] px-8">
-            <div className="flex h-full items-center gap-3">
+<header className="flex h-[56px] w-full shrink-0 items-center justify-between gap-2 border-b border-[#292B34] bg-[#101116] px-3">        
+   <div className="flex h-full min-w-0 items-center gap-1">
                 <NavLink
                     to="/"
                     end
                     className={({ isActive }) => classeMenu(isActive)}
                 >
-                    <House size={18} />
+                    <House size={15} />
                     Home
                 </NavLink>
 
                 {renderBotaoMenu(
                     "planejamento",
                     "Planejamento",
-                    <Database size={18} />,
+                    <Database size={15} />,
                     planejamentoAtivo
                 )}
 
                 {renderBotaoMenu(
                     "gestao",
                     "Gestão Pré-embarque",
-                    <ClipboardList size={18} />,
+                    <ClipboardList size={15} />,
                     gestaoAtiva
                 )}
 
                 {renderBotaoMenu(
                     "embarque",
                     "Embarque Internacional",
-                    <Ship size={18} />,
+                    <Ship size={15} />,
                     embarqueAtivo
                 )}
 
                 {renderBotaoMenu(
                     "posEmbarque",
                     "Pós-Embarque",
-                    <PackageCheck size={18} />,
+                    <PackageCheck size={15} />,
                     posEmbarqueAtivo
+                )}
+              
+                {renderBotaoMenu(
+                    "chegadaBrasil",
+                    "Chegada da Carga no Brasil",
+                    <Anchor size={15} />,
+                    chegadaBrasilAtiva
                 )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-4 pl-4">
-                <div className="flex items-center gap-2 rounded-full border border-[#2e323e] bg-[#181920] px-4 py-2 text-sm text-gray-300">
+            <div className="flex shrink-0 items-center gap-2 pl-1">
+                <div className="flex items-center gap-1.5 rounded-full border border-[#2e323e] bg-[#181920] px-2 py-1 text-xs text-gray-300">
                     <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                    <Database size={16} className="text-gray-400" />
+                    <Database size={15} className="text-gray-400" />
                     <span className="font-medium">
                         {processCount} processos
                     </span>
@@ -181,7 +193,7 @@ export default function Navbar({
                     title="Atualizar dashboard"
                     className="flex items-center justify-center rounded-md border border-[#2e323e] bg-[#181920] p-2 text-gray-400 hover:bg-[#252731] hover:text-white"
                 >
-                    <RefreshCw size={17} />
+                    <RefreshCw size={15} />
                 </button>
             </div>
         </header>
