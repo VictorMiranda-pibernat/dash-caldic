@@ -8,6 +8,7 @@ import GestaoPreEmbarque from "./components/pages/GestaoPreEmbarque";
 import EmbarqueInternacional from "./components/pages/EmbarqueInternacional";
 import PosEmbarque from "./components/pages/PosEmbarque";
 import ChegadaBrasil from "./components/pages/ChegadaBrasil";
+import Desembaraco from "./components/pages/Desembaraco";
 
 export default function App() {
     return (
@@ -64,15 +65,22 @@ export default function App() {
                         element={<EmbarqueInternacional />}
                     />
 
+                    {/* PÓS-EMBARQUE */}
                     <Route
                         path="/pos-embarque"
-                        element={<Navigate to="/pos-embarque/guarulhos" replace />}
+                        element={
+                            <Navigate
+                                to="/pos-embarque/guarulhos"
+                                replace
+                            />
+                        }
                     />
 
                     <Route
                         path="/pos-embarque/:local"
                         element={<PosEmbarque />}
                     />
+
                     {/* CHEGADA DA CARGA NO BRASIL */}
                     <Route
                         path="/chegada-brasil"
@@ -87,6 +95,22 @@ export default function App() {
                     <Route
                         path="/chegada-brasil/:local"
                         element={<ChegadaBrasil />}
+                    />
+
+                    {/* DESEMBARAÇO ADUANEIRO E PÓS-DESEMBARAÇO */}
+                    <Route
+                        path="/desembaraco"
+                        element={
+                            <Navigate
+                                to="/desembaraco/guarulhos"
+                                replace
+                            />
+                        }
+                    />
+
+                    <Route
+                        path="/desembaraco/:local"
+                        element={<Desembaraco />}
                     />
                 </Route>
             </Routes>

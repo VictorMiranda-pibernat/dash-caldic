@@ -8,6 +8,7 @@ import {
     Ship,
     PackageCheck,
     Anchor,
+    FileCheck2,
 } from "lucide-react";
 
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -23,7 +24,8 @@ type Pagina =
     | "gestao"
     | "embarque"
     | "posEmbarque"
-    | "chegadaBrasil";
+    | "chegadaBrasil"
+    | "desembaraco";
 
 export default function Navbar({
     processCount = 0,
@@ -50,6 +52,9 @@ export default function Navbar({
     const chegadaBrasilAtiva =
         location.pathname.startsWith("/chegada-brasil");
 
+    const desembaracoAtivo =
+        location.pathname.startsWith("/desembaraco");
+
     function selecionarUnidade(unidade: string, pagina: Pagina) {
         const rotas: Record<Pagina, string> = {
             planejamento: `/planejamento/${unidade}`,
@@ -57,6 +62,7 @@ export default function Navbar({
             embarque: `/embarque-internacional/${unidade}`,
             posEmbarque: `/pos-embarque/${unidade}`,
             chegadaBrasil: `/chegada-brasil/${unidade}`,
+            desembaraco: `/desembaraco/${unidade}`,
         };
 
         navigate(rotas[pagina]);
@@ -64,11 +70,11 @@ export default function Navbar({
     }
 
     const classeMenu = (ativo: boolean) =>
-    `flex items-center gap-1.5 rounded-md px-2 py-2 text-[12px] whitespace-nowrap transition ${
-        ativo
-            ? "bg-[#343640] font-semibold text-white"
-            : "text-gray-400 hover:bg-[#252731] hover:text-white"
-    }`;
+        `flex items-center gap-1.5 rounded-md px-2 py-2 text-[12px] whitespace-nowrap transition ${
+            ativo
+                ? "bg-[#343640] font-semibold text-white"
+                : "text-gray-400 hover:bg-[#252731] hover:text-white"
+        }`;
 
     function renderDropdown(pagina: Pagina) {
         return (
@@ -118,8 +124,11 @@ export default function Navbar({
 
                     <ChevronDown
                         size={16}
-                        className={`transition-transform ${dropdownAberto === pagina ? "rotate-180" : ""
-                            }`}
+                        className={`transition-transform ${
+                            dropdownAberto === pagina
+                                ? "rotate-180"
+                                : ""
+                        }`}
                     />
                 </button>
 
@@ -130,8 +139,10 @@ export default function Navbar({
     }
 
     return (
-<header className="flex h-[56px] w-full shrink-0 items-center justify-between gap-2 border-b border-[#292B34] bg-[#101116] px-3">        
-   <div className="flex h-full min-w-0 items-center gap-1">
+        <header className="flex h-[56px] w-full shrink-0 items-center justify-between gap-2 border-b border-[#292B34] bg-[#101116] px-3">
+
+            <div className="flex h-full min-w-0 items-center gap-1">
+
                 <NavLink
                     to="/"
                     end
@@ -168,19 +179,33 @@ export default function Navbar({
                     <PackageCheck size={15} />,
                     posEmbarqueAtivo
                 )}
-              
+
                 {renderBotaoMenu(
                     "chegadaBrasil",
                     "Chegada da Carga no Brasil",
                     <Anchor size={15} />,
                     chegadaBrasilAtiva
                 )}
+
+                {renderBotaoMenu(
+                    "desembaraco",
+                    "Desembaraço Aduaneiro",
+                    <FileCheck2 size={15} />,
+                    desembaracoAtivo
+                )}
+
             </div>
 
             <div className="flex shrink-0 items-center gap-2 pl-1">
+
                 <div className="flex items-center gap-1.5 rounded-full border border-[#2e323e] bg-[#181920] px-2 py-1 text-xs text-gray-300">
                     <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                    <Database size={15} className="text-gray-400" />
+
+                    <Database
+                        size={15}
+                        className="text-gray-400"
+                    />
+
                     <span className="font-medium">
                         {processCount} processos
                     </span>
@@ -195,6 +220,7 @@ export default function Navbar({
                 >
                     <RefreshCw size={15} />
                 </button>
+
             </div>
         </header>
     );
