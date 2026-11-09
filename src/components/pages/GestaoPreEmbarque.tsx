@@ -60,10 +60,7 @@ export default function GestaoPreEmbarque() {
                     (atividade) =>
                         atividade.etapa.trim().startsWith("2.")
                 );
-                console.log("Unidade:", unidade);
-                console.log("Total de atividades:", planejamento.atividades.length);
-                console.log("Atividades da Gestão:", atividadesGestao);
-
+                
                 if (ativo) {
                     setAtividades(atividadesGestao);
                 }
