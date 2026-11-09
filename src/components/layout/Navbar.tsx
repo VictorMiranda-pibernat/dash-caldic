@@ -25,7 +25,8 @@ type Pagina =
     | "embarque"
     | "posEmbarque"
     | "chegadaBrasil"
-    | "desembaraco";
+    | "desembaraco"
+    | "transporteNacional";
 
 export default function Navbar({
     processCount = 0,
@@ -55,6 +56,9 @@ export default function Navbar({
     const desembaracoAtivo =
         location.pathname.startsWith("/desembaraco");
 
+    const transporteNacionalAtivo =
+        location.pathname.startsWith("/transporte-nacional");
+
     function selecionarUnidade(unidade: string, pagina: Pagina) {
         const rotas: Record<Pagina, string> = {
             planejamento: `/planejamento/${unidade}`,
@@ -63,6 +67,7 @@ export default function Navbar({
             posEmbarque: `/pos-embarque/${unidade}`,
             chegadaBrasil: `/chegada-brasil/${unidade}`,
             desembaraco: `/desembaraco/${unidade}`,
+            transporteNacional: `/transporte-nacional/${unidade}`,
         };
 
         navigate(rotas[pagina]);
@@ -193,6 +198,54 @@ export default function Navbar({
                     <FileCheck2 size={15} />,
                     desembaracoAtivo
                 )}
+
+                <div className="relative">
+    <button
+        type="button"
+        onClick={() =>
+            setDropdownAberto(
+                dropdownAberto === "transporteNacional"
+                    ? null
+                    : "transporteNacional"
+            )
+        }
+        className={classeMenu(transporteNacionalAtivo)}
+    >
+        +4
+        <ChevronDown
+            size={16}
+            className={`transition-transform ${
+                dropdownAberto === "transporteNacional"
+                    ? "rotate-180"
+                    : ""
+            }`}
+        />
+    </button>
+
+    {dropdownAberto === "transporteNacional" && (
+        <div className="absolute right-0 top-full z-50 mt-2 min-w-[240px] overflow-hidden rounded-md border border-[#292B34] bg-[#181920] py-1 shadow-xl">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500">
+                ETAPA 8 e 9
+            </div>
+
+            <button
+                type="button"
+                onClick={() => selecionarUnidade("guarulhos", "transporteNacional")}
+                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
+            >
+                Transporte Nacional — Guarulhos
+            </button>
+
+            <button
+                type="button"
+                onClick={() => selecionarUnidade("santa-catarina", "transporteNacional")}
+                className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-[#252731] hover:text-white"
+            >
+                Transporte Nacional — Santa Catarina
+            </button>
+        </div>
+    )}
+</div>
 
             </div>
 

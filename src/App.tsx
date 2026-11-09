@@ -9,6 +9,7 @@ import EmbarqueInternacional from "./components/pages/EmbarqueInternacional";
 import PosEmbarque from "./components/pages/PosEmbarque";
 import ChegadaBrasil from "./components/pages/ChegadaBrasil";
 import Desembaraco from "./components/pages/Desembaraco";
+import TransporteNacional from "./components/pages/TransporteNacional";
 
 export default function App() {
     return (
@@ -111,6 +112,22 @@ export default function App() {
                     <Route
                         path="/desembaraco/:local"
                         element={<Desembaraco />}
+                    />
+
+                    {/* TRANSPORTE NACIONAL E ENTREGA */}
+                    <Route
+                        path="/transporte-nacional"
+                        element={
+                            <Navigate
+                                to="/transporte-nacional/guarulhos"
+                                replace
+                            />
+                        }
+                    />
+
+                    <Route
+                        path="/transporte-nacional/:local"
+                        element={<TransporteNacional />}
                     />
                 </Route>
             </Routes>

@@ -62,4 +62,5 @@ export interface ExecucaoAtividade {
   modal?: ModalTransporte;
   dataInicio: string;
   dataConclusao: string;
+   dataEntregaPrevista?: string;
 }
