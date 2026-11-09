@@ -4,8 +4,7 @@ import { useParams } from "react-router-dom";
 
 import type {
     Unidade,
-    AtividadePlanejamento,
-    ModalTransporte,
+    AtividadePlanejamento
 } from "../types/planejamento";
 
 import { usePlanejamento } from "../../hooks/usePlanejamento";

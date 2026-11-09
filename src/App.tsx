@@ -10,6 +10,7 @@ import PosEmbarque from "./components/pages/PosEmbarque";
 import ChegadaBrasil from "./components/pages/ChegadaBrasil";
 import Desembaraco from "./components/pages/Desembaraco";
 import TransporteNacional from "./components/pages/TransporteNacional";
+import PosProcesso from "./components/pages/PosProcesso";
 
 export default function App() {
     return (
@@ -21,14 +22,8 @@ export default function App() {
                     {/* PLANEJAMENTO */}
                     <Route
                         path="/planejamento"
-                        element={
-                            <Navigate
-                                to="/planejamento/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/planejamento/guarulhos" replace />}
                     />
-
                     <Route
                         path="/planejamento/:local"
                         element={<Planejamento />}
@@ -37,14 +32,8 @@ export default function App() {
                     {/* GESTÃO PRÉ-EMBARQUE */}
                     <Route
                         path="/gestao-pre-embarque"
-                        element={
-                            <Navigate
-                                to="/gestao-pre-embarque/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/gestao-pre-embarque/guarulhos" replace />}
                     />
-
                     <Route
                         path="/gestao-pre-embarque/:local"
                         element={<GestaoPreEmbarque />}
@@ -53,14 +42,8 @@ export default function App() {
                     {/* EMBARQUE INTERNACIONAL */}
                     <Route
                         path="/embarque-internacional"
-                        element={
-                            <Navigate
-                                to="/embarque-internacional/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/embarque-internacional/guarulhos" replace />}
                     />
-
                     <Route
                         path="/embarque-internacional/:local"
                         element={<EmbarqueInternacional />}
@@ -69,14 +52,8 @@ export default function App() {
                     {/* PÓS-EMBARQUE */}
                     <Route
                         path="/pos-embarque"
-                        element={
-                            <Navigate
-                                to="/pos-embarque/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/pos-embarque/guarulhos" replace />}
                     />
-
                     <Route
                         path="/pos-embarque/:local"
                         element={<PosEmbarque />}
@@ -85,14 +62,8 @@ export default function App() {
                     {/* CHEGADA DA CARGA NO BRASIL */}
                     <Route
                         path="/chegada-brasil"
-                        element={
-                            <Navigate
-                                to="/chegada-brasil/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/chegada-brasil/guarulhos" replace />}
                     />
-
                     <Route
                         path="/chegada-brasil/:local"
                         element={<ChegadaBrasil />}
@@ -101,14 +72,8 @@ export default function App() {
                     {/* DESEMBARAÇO ADUANEIRO E PÓS-DESEMBARAÇO */}
                     <Route
                         path="/desembaraco"
-                        element={
-                            <Navigate
-                                to="/desembaraco/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/desembaraco/guarulhos" replace />}
                     />
-
                     <Route
                         path="/desembaraco/:local"
                         element={<Desembaraco />}
@@ -117,17 +82,21 @@ export default function App() {
                     {/* TRANSPORTE NACIONAL E ENTREGA */}
                     <Route
                         path="/transporte-nacional"
-                        element={
-                            <Navigate
-                                to="/transporte-nacional/guarulhos"
-                                replace
-                            />
-                        }
+                        element={<Navigate to="/transporte-nacional/guarulhos" replace />}
                     />
-
                     <Route
                         path="/transporte-nacional/:local"
                         element={<TransporteNacional />}
+                    />
+
+                    {/* PÓS-PROCESSO / CONTROLE */}
+                    <Route
+                        path="/pos-processo"
+                        element={<Navigate to="/pos-processo/guarulhos" replace />}
+                    />
+                    <Route
+                        path="/pos-processo/:local"
+                        element={<PosProcesso />}
                     />
                 </Route>
             </Routes>
