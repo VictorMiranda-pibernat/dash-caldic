@@ -131,15 +131,6 @@ export default function Navbar({
                     <House size={15} /> Home
                 </NavLink>
 
-                <NavLink
-                    to="/panorama-internacional"
-                    onClick={() => setDropdownAberto(null)}
-                    className={() => classeMenu(
-                        location.pathname.startsWith("/panorama-internacional")
-                    )}
-                >
-                    <Globe size={15} /> Panorama Internacional
-                </NavLink>
 
                 {menus.map(({ pagina, titulo, icone }) => {
                     const ativo = location.pathname.startsWith(rotas[pagina]);
@@ -165,6 +156,17 @@ export default function Navbar({
                         </div>
                     );
                 })}
+
+                
+                <NavLink
+                    to="/panorama-internacional"
+                    onClick={() => setDropdownAberto(null)}
+                    className={() => classeMenu(
+                        location.pathname.startsWith("/panorama-internacional")
+                    )}
+                >
+                    <Globe size={15} /> Panorama Internacional
+                </NavLink>
             </div>
 
             {/* INDICADORES FIXOS */}

@@ -11,7 +11,7 @@ import ChegadaBrasil from "./components/pages/ChegadaBrasil";
 import Desembaraco from "./components/pages/Desembaraco";
 import TransporteNacional from "./components/pages/TransporteNacional";
 import PosProcesso from "./components/pages/PosProcesso";
-// import PanoramaInternacional from "./components/pages/PanoramaInternacional";
+import PanoramaInternacional from "./components/pages/PanoramaInternacional";
 
 export default function App() {
     return (
@@ -20,92 +20,37 @@ export default function App() {
                 <Route element={<Layout />}>
                     <Route path="/" element={<Home />} />
 
-                    {/* PANORAMA INTERNACIONAL
                     <Route
                         path="/panorama-internacional"
                         element={<PanoramaInternacional />}
-                    /> */}
-
-                    {/* PLANEJAMENTO */}
-                    <Route
-                        path="/planejamento"
-                        element={<Navigate to="/planejamento/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/planejamento/:local"
-                        element={<Planejamento />}
                     />
 
-                    {/* GESTÃO PRÉ-EMBARQUE */}
-                    <Route
-                        path="/gestao-pre-embarque"
-                        element={<Navigate to="/gestao-pre-embarque/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/gestao-pre-embarque/:local"
-                        element={<GestaoPreEmbarque />}
-                    />
+                    <Route path="/planejamento" element={<Navigate to="/planejamento/guarulhos" replace />} />
+                    <Route path="/planejamento/:local" element={<Planejamento />} />
 
-                    {/* EMBARQUE INTERNACIONAL */}
-                    <Route
-                        path="/embarque-internacional"
-                        element={<Navigate to="/embarque-internacional/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/embarque-internacional/:local"
-                        element={<EmbarqueInternacional />}
-                    />
+                    <Route path="/gestao-pre-embarque" element={<Navigate to="/gestao-pre-embarque/guarulhos" replace />} />
+                    <Route path="/gestao-pre-embarque/:local" element={<GestaoPreEmbarque />} />
 
-                    {/* PÓS-EMBARQUE */}
-                    <Route
-                        path="/pos-embarque"
-                        element={<Navigate to="/pos-embarque/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/pos-embarque/:local"
-                        element={<PosEmbarque />}
-                    />
+                    <Route path="/embarque-internacional" element={<Navigate to="/embarque-internacional/guarulhos" replace />} />
+                    <Route path="/embarque-internacional/:local" element={<EmbarqueInternacional />} />
 
-                    {/* CHEGADA DA CARGA NO BRASIL */}
-                    <Route
-                        path="/chegada-brasil"
-                        element={<Navigate to="/chegada-brasil/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/chegada-brasil/:local"
-                        element={<ChegadaBrasil />}
-                    />
+                    <Route path="/pos-embarque" element={<Navigate to="/pos-embarque/guarulhos" replace />} />
+                    <Route path="/pos-embarque/:local" element={<PosEmbarque />} />
 
-                    {/* DESEMBARAÇO ADUANEIRO E PÓS-DESEMBARAÇO */}
-                    <Route
-                        path="/desembaraco"
-                        element={<Navigate to="/desembaraco/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/desembaraco/:local"
-                        element={<Desembaraco />}
-                    />
+                    <Route path="/chegada-brasil" element={<Navigate to="/chegada-brasil/guarulhos" replace />} />
+                    <Route path="/chegada-brasil/:local" element={<ChegadaBrasil />} />
 
-                    {/* TRANSPORTE NACIONAL E ENTREGA */}
-                    <Route
-                        path="/transporte-nacional"
-                        element={<Navigate to="/transporte-nacional/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/transporte-nacional/:local"
-                        element={<TransporteNacional />}
-                    />
+                    <Route path="/desembaraco" element={<Navigate to="/desembaraco/guarulhos" replace />} />
+                    <Route path="/desembaraco/:local" element={<Desembaraco />} />
 
-                    {/* PÓS-PROCESSO / CONTROLE */}
-                    <Route
-                        path="/pos-processo"
-                        element={<Navigate to="/pos-processo/guarulhos" replace />}
-                    />
-                    <Route
-                        path="/pos-processo/:local"
-                        element={<PosProcesso />}
-                    />
+                    <Route path="/transporte-nacional" element={<Navigate to="/transporte-nacional/guarulhos" replace />} />
+                    <Route path="/transporte-nacional/:local" element={<TransporteNacional />} />
+
+                    <Route path="/pos-processo" element={<Navigate to="/pos-processo/guarulhos" replace />} />
+                    <Route path="/pos-processo/:local" element={<PosProcesso />} />
                 </Route>
+
+                <Route path="*" element={<div className="p-8 text-white">Rota não encontrada.</div>} />
             </Routes>
         </BrowserRouter>
     );
