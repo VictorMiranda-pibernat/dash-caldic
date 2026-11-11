@@ -15,8 +15,11 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",
+    "react-simple-maps": "^5.0.5",
     "recharts": "^3.10.1",
-    "tailwindcss": "^4.3.4"
+    "tailwindcss": "^4.3.4",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
