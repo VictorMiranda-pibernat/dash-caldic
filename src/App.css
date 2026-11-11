@@ -181,4 +181,30 @@
     right: 0;
     border-right-color: var(--border);
   }
+
+/* NAVBAR MENUBAR */
+
+.navbar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #555866 #181920;
+}
+
+.navbar-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.navbar-scroll::-webkit-scrollbar-track {
+    background: #181920;
+}
+
+.navbar-scroll::-webkit-scrollbar-thumb {
+    background: #555866;
+    border-radius: 10px;
+}
+
+.navbar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #777b8a;
+}
+
+
 }

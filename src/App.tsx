@@ -11,6 +11,7 @@ import ChegadaBrasil from "./components/pages/ChegadaBrasil";
 import Desembaraco from "./components/pages/Desembaraco";
 import TransporteNacional from "./components/pages/TransporteNacional";
 import PosProcesso from "./components/pages/PosProcesso";
+// import PanoramaInternacional from "./components/pages/PanoramaInternacional";
 
 export default function App() {
     return (
@@ -18,6 +19,12 @@ export default function App() {
             <Routes>
                 <Route element={<Layout />}>
                     <Route path="/" element={<Home />} />
+
+                    {/* PANORAMA INTERNACIONAL
+                    <Route
+                        path="/panorama-internacional"
+                        element={<PanoramaInternacional />}
+                    /> */}
 
                     {/* PLANEJAMENTO */}
                     <Route

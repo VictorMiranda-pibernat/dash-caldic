@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, RefreshCw, Ship } from "lucide-react";
 import {
     ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-    PieChart, Pie, Cell, LineChart, Line, Legend,
+    PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
 
 import { usePlanejamento } from "../../hooks/usePlanejamento";
