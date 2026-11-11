@@ -1,75 +1,165 @@
-# React + TypeScript + Vite
+# Dash CALDIC - KPI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dashboard de Business Intelligence desenvolvido para acompanhamento e análise dos indicadores operacionais dos processos de importação da CALDIC.
 
-Currently, two official plugins are available:
+A aplicação permite monitorar atividades, acompanhar prazos, avaliar o cumprimento dos SLAs e visualizar o desempenho operacional por meio de indicadores e gráficos interativos.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Objetivo
 
-## React Compiler
+Centralizar os indicadores dos processos de importação em uma única plataforma, proporcionando maior visibilidade operacional e apoiando a tomada de decisão.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Unidades atendidas
 
-## Expanding the ESLint configuration
+- Guarulhos
+- Santa Catarina
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Etapas do processo
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+O dashboard está organizado em nove etapas operacionais:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Planejamento
+2. Gestão Pré-Embarque
+3. Embarque Internacional
+4. Pós-Embarque
+5. Chegada Brasil
+6. Desembaraço Aduaneiro
+7. Pós-Desembaraço Aduaneiro
+8. Transporte Nacional e Entrega
+9. Pós-processo / Controle
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Além das etapas, o sistema possui uma página inicial (Home).
 
+## Funcionalidades
+
+- Navegação entre as etapas do processo.
+- Seleção da unidade operacional.
+- Indicadores de desempenho (KPIs).
+- Monitoramento de SLA.
+- Comparação de execuções dentro e fora do prazo.
+- Gráficos de evolução mensal.
+- Análise de aderência por atividade.
+- Filtros por período e modal de transporte.
+- Dados demonstrativos para validação das funcionalidades.
+
+## Tecnologias
+
+| Tecnologia | Utilização |
+|---|---|
+| React | Interface |
+| Vite | Desenvolvimento e build |
+| TypeScript | Tipagem |
+| Tailwind CSS | Estilização |
+| React Router DOM | Navegação |
+| Lucide React | Ícones |
+| Recharts | Gráficos |
+
+## Estrutura do projeto
+
+```text
+dash-caldic/
+├── public/
+├── src/
+│   ├── components/
+│   │   ├── charts/
+│   │   ├── data/
+│   │   │   └── mock/
+│   │   ├── layout/
+│   │   ├── pages/
+│   │   ├── repositories/
+│   │   ├── types/
+│   │   └── utils/
+│   ├── hooks/
+│   ├── App.tsx
+│   └── main.tsx
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+*Observação: a estrutura acima representa a organização principal da aplicação; arquivos adicionais de configuração podem existir no repositório.*
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Como executar localmente
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Pré-requisitos
 
+- Node.js
+- npm
+- Git
+
+### 1. Clonar o repositório
+
+```bash
+git clone URL_DO_REPOSITORIO
 ```
+
+### 2. Entrar na pasta
+
+```bash
+cd dash-caldic
+```
+
+### 3. Instalar as dependências
+
+```bash
+npm install
+```
+
+### 4. Executar o projeto
+
+```bash
+npm run dev
+```
+
+### 5. Gerar build de produção
+
+```bash
+npm run build
+```
+
+Os arquivos compilados serão gerados na pasta `dist`.
+
+## Dados e integração
+
+Atualmente, o dashboard utiliza dados demonstrativos para validar a estrutura das páginas, os filtros, os gráficos e os cálculos dos indicadores.
+
+A integração com Google BigQuery, por meio de uma API ou serviço de backend, está prevista como próxima etapa de desenvolvimento.
+
+Os dados apresentados na versão demonstrativa não representam resultados reais da operação.
+
+## Indicadores e SLA
+
+Os indicadores são calculados a partir das regras de prazo definidas para cada atividade.
+
+Principais métricas:
+
+- Total de execuções;
+- Execuções dentro do SLA;
+- Execuções fora do SLA;
+- Aderência percentual;
+- Tempo médio por atividade;
+- Evolução mensal do desempenho.
+
+## Status do projeto
+
+**Em desenvolvimento.**
+
+- [x] Estrutura inicial do dashboard.
+- [x] Navegação entre as etapas.
+- [x] Separação das unidades operacionais.
+- [x] Estrutura de dados demonstrativos.
+- [x] Indicadores e gráficos.
+- [x] Filtros de período e modal.
+- [x] Consolidação de indicadores de Pós-processo.
+- [ ] Integração com BigQuery.
+- [ ] Integração definitiva com dados reais.
+- [ ] Validação final dos indicadores com a operação.
+
+## Documentação
+
+A documentação técnica completa descreve a arquitetura, as funcionalidades, as regras de negócio, os indicadores e as próximas etapas do projeto.
+
+---
+
+**Projeto:** Dash CALDIC - KPI  
+**Categoria:** Business Intelligence / Gestão Operacional  
+**Desenvolvimento:** Novembro de 2026
