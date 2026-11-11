@@ -1,49 +1,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, RefreshCw, Ship } from "lucide-react";
 import {
-    AlertTriangle,
-    CalendarDays,
-    CheckCircle2,
-    Clock3,
-    RefreshCw,
-    Ship,
-} from "lucide-react";
-
-import {
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    PieChart,
-    Pie,
-    Cell,
-    LineChart,
-    Line,
-    Legend,
+    ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+    PieChart, Pie, Cell, LineChart, Line, Legend,
 } from "recharts";
-
 import { usePlanejamento } from "../../hooks/usePlanejamento";
-
-import type {
-    AtividadePlanejamento,
-    ModalTransporte,
-    Unidade,
-} from "../types/planejamento";
-
+import type { AtividadePlanejamento, ModalTransporte, Unidade } from "../types/planejamento";
 import { gerarExecucoesDesembaraco } from "../data/mock/gerarExecucoesDesembaraco";
-
 import { calcularKPIsDesembaraco } from "../utils/kpiDesembaraco";
+import TabelaAnalitica from "../layout/TabelaAnalitica";
 
 const MESES = [
-    "Janeiro", "Fevereiro", "Março", "Abril",
-    "Maio", "Junho", "Julho", "Agosto",
-    "Setembro", "Outubro", "Novembro", "Dezembro",
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
+
+const MODAIS: ModalTransporte[] = ["aereo", "maritimo", "rodoviario"];
 
 const CORES = {
     verde: "#22C55E",
@@ -53,7 +27,6 @@ const CORES = {
 };
 
 const CORES_GRAFICO = ["#22C55E", "#EF4444"];
-
 type ModalFiltro = ModalTransporte | "todos";
 
 function formatarPercentual(valor: number): string {
@@ -62,11 +35,7 @@ function formatarPercentual(valor: number): string {
 
 function formatarHoras(valor: number | null): string {
     if (valor === null) return "—";
-
-    if (valor < 1) {
-        return `${Math.round(valor * 60)} min`;
-    }
-
+    if (valor < 1) return `${Math.round(valor * 60)} min`;
     return `${valor.toFixed(1).replace(".", ",")} h`;
 }
 
@@ -76,16 +45,11 @@ function nomeModal(modal: ModalTransporte): string {
         maritimo: "Marítimo",
         rodoviario: "Rodoviário",
     };
-
     return nomes[modal];
 }
 
 function CardIndicador({
-    titulo,
-    valor,
-    descricao,
-    icone,
-    cor,
+    titulo, valor, descricao, icone, cor,
 }: {
     titulo: string;
     valor: string | number;
@@ -98,23 +62,10 @@ function CardIndicador({
             <div className="flex items-start justify-between">
                 <div>
                     <p className="text-sm text-gray-400">{titulo}</p>
-
-                    <h3 className="mt-3 text-2xl font-bold text-white">
-                        {valor}
-                    </h3>
-
-                    <p className="mt-2 text-xs text-gray-500">
-                        {descricao}
-                    </p>
+                    <h3 className="mt-3 text-2xl font-bold text-white">{valor}</h3>
+                    <p className="mt-2 text-xs text-gray-500">{descricao}</p>
                 </div>
-
-                <div
-                    className="rounded-lg p-3"
-                    style={{
-                        backgroundColor: `${cor}20`,
-                        color: cor,
-                    }}
-                >
+                <div className="rounded-lg p-3" style={{ backgroundColor: `${cor}20`, color: cor }}>
                     {icone}
                 </div>
             </div>
@@ -123,9 +74,7 @@ function CardIndicador({
 }
 
 function CardGrafico({
-    titulo,
-    descricao,
-    children,
+    titulo, descricao, children,
 }: {
     titulo: string;
     descricao: string;
@@ -137,7 +86,6 @@ function CardGrafico({
                 <h3 className="font-semibold text-white">{titulo}</h3>
                 <p className="mt-1 text-xs text-gray-500">{descricao}</p>
             </div>
-
             {children}
         </div>
     );
@@ -145,25 +93,11 @@ function CardGrafico({
 
 export default function Desembaraco() {
     const { local } = useParams<{ local: string }>();
+    const unidade: Unidade = local === "santa-catarina" ? "santa-catarina" : "guarulhos";
 
-    const unidade: Unidade =
-        local === "santa-catarina"
-            ? "santa-catarina"
-            : "guarulhos";
-
-    const modais: ModalTransporte[] = [
-        "aereo",
-        "maritimo",
-        "rodoviario",
-    ];
-
-    const [atividades, setAtividades] = useState<
-        AtividadePlanejamento[]
-    >([]);
-
+    const [atividades, setAtividades] = useState<AtividadePlanejamento[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
-
     const [dataInicio, setDataInicio] = useState("2026-06-01");
     const [dataFim, setDataFim] = useState("2026-11-30");
     const [modal, setModal] = useState<ModalFiltro>("todos");
@@ -176,104 +110,56 @@ export default function Desembaraco() {
             try {
                 setCarregando(true);
                 setErro(null);
-
                 const resultado = await usePlanejamento(unidade);
-
                 if (!ativo) return;
 
-                const atividadesDesembaraco = resultado.atividades.filter(
-                    (atividade) => {
-                        const etapa = atividade.etapa.trim();
-
-                        return (
-                            etapa.startsWith("6.") ||
-                            etapa.startsWith("7.")
-                        );
-                    }
-                );
+                const atividadesDesembaraco = resultado.atividades.filter((atividade) => {
+                    const etapa = atividade.etapa.trim();
+                    return etapa.startsWith("6.") || etapa.startsWith("7.");
+                });
 
                 setAtividades(atividadesDesembaraco);
             } catch (error) {
-                console.error(
-                    "Erro ao carregar Desembaraço Aduaneiro:",
-                    error
-                );
-
+                console.error("Erro ao carregar Desembaraço Aduaneiro:", error);
                 if (ativo) {
-                    setErro(
-                        "Não foi possível carregar as atividades de Desembaraço Aduaneiro e Pós-desembaraço."
-                    );
+                    setErro("Não foi possível carregar as atividades de Desembaraço Aduaneiro e Pós-desembaraço.");
                 }
             } finally {
-                if (ativo) {
-                    setCarregando(false);
-                }
+                if (ativo) setCarregando(false);
             }
         }
 
         carregarDados();
-
         return () => {
             ativo = false;
         };
     }, [unidade]);
 
     // Geração das execuções fictícias
-    const execucoes = useMemo(() => {
-        return gerarExecucoesDesembaraco(
-            atividades,
-            unidade
-        );
-    }, [atividades, unidade]);
+    const execucoes = useMemo(
+        () => gerarExecucoesDesembaraco(atividades, unidade),
+        [atividades, unidade]
+    );
 
     // Cálculo dos indicadores
-    const resultados = useMemo(() => {
-        return calcularKPIsDesembaraco(
-            atividades,
-            execucoes,
-            unidade,
-            dataInicio,
-            dataFim
-        );
-    }, [
-        atividades,
-        execucoes,
-        unidade,
-        dataInicio,
-        dataFim,
-    ]);
+    const resultados = useMemo(
+        () => calcularKPIsDesembaraco(atividades, execucoes, unidade, dataInicio, dataFim),
+        [atividades, execucoes, unidade, dataInicio, dataFim]
+    );
 
     // Aplicação do filtro de modal
     const resultadosFiltrados = useMemo(() => {
         if (modal === "todos") return resultados;
-
-        return resultados.filter(
-            (item) => item.modal === modal
-        );
+        return resultados.filter((item) => item.modal === modal);
     }, [resultados, modal]);
 
     // Resumo geral
     const resumo = useMemo(() => {
-        const total = resultadosFiltrados.reduce(
-            (soma, item) => soma + item.totalExecucoes,
-            0
-        );
-
-        const dentro = resultadosFiltrados.reduce(
-            (soma, item) => soma + item.dentroPrazo,
-            0
-        );
-
-        const fora = resultadosFiltrados.reduce(
-            (soma, item) => soma + item.foraPrazo,
-            0
-        );
-
+        const total = resultadosFiltrados.reduce((soma, item) => soma + item.totalExecucoes, 0);
+        const dentro = resultadosFiltrados.reduce((soma, item) => soma + item.dentroPrazo, 0);
+        const fora = resultadosFiltrados.reduce((soma, item) => soma + item.foraPrazo, 0);
         const somaHoras = resultadosFiltrados.reduce(
-            (soma, item) =>
-                soma +
-                (item.tempoMedioHoras ?? 0) *
-                    item.totalExecucoes,
+            (soma, item) => soma + (item.tempoMedioHoras ?? 0) * item.totalExecucoes,
             0
         );
 
@@ -281,36 +167,27 @@ export default function Desembaraco() {
             total,
             dentro,
             fora,
-            aderencia:
-                total > 0 ? (dentro / total) * 100 : 0,
-            tempoMedio:
-                total > 0 ? somaHoras / total : null,
+            aderencia: total > 0 ? (dentro / total) * 100 : 0,
+            tempoMedio: total > 0 ? somaHoras / total : null,
         };
     }, [resultadosFiltrados]);
 
     // Evolução mensal
     const dadosMensais = useMemo(() => {
-        const agrupado = new Map<
-            string,
-            {
-                mes: string;
-                total: number;
-                dentro: number;
-                fora: number;
-                aderencia: number;
-            }
-        >();
+        const agrupado = new Map<string, {
+            mes: string;
+            total: number;
+            dentro: number;
+            fora: number;
+            aderencia: number;
+        }>();
 
         resultadosFiltrados.forEach((item) => {
-            const chave = `${item.ano}-${String(
-                item.mes
-            ).padStart(2, "0")}`;
+            const chave = `${item.ano}-${String(item.mes).padStart(2, "0")}`;
 
             if (!agrupado.has(chave)) {
                 agrupado.set(chave, {
-                    mes: `${MESES[item.mes - 1].slice(0, 3)}/${String(
-                        item.ano
-                    ).slice(-2)}`,
+                    mes: `${MESES[item.mes - 1].slice(0, 3)}/${String(item.ano).slice(-2)}`,
                     total: 0,
                     dentro: 0,
                     fora: 0,
@@ -319,7 +196,6 @@ export default function Desembaraco() {
             }
 
             const registro = agrupado.get(chave)!;
-
             registro.total += item.totalExecucoes;
             registro.dentro += item.dentroPrazo;
             registro.fora += item.foraPrazo;
@@ -327,25 +203,19 @@ export default function Desembaraco() {
 
         return Array.from(agrupado.values()).map((item) => ({
             ...item,
-            aderencia:
-                item.total > 0
-                    ? (item.dentro / item.total) * 100
-                    : 0,
+            aderencia: item.total > 0 ? (item.dentro / item.total) * 100 : 0,
         }));
     }, [resultadosFiltrados]);
 
     // Aderência por atividade
     const dadosAtividades = useMemo(() => {
-        const agrupado = new Map<
-            string,
-            {
-                atividadeKey: string;
-                atividade: string;
-                dentro: number;
-                fora: number;
-                total: number;
-            }
-        >();
+        const agrupado = new Map<string, {
+            atividadeKey: string;
+            atividade: string;
+            dentro: number;
+            fora: number;
+            total: number;
+        }>();
 
         resultadosFiltrados.forEach((item) => {
             if (!agrupado.has(item.atividadeKey)) {
@@ -359,7 +229,6 @@ export default function Desembaraco() {
             }
 
             const registro = agrupado.get(item.atividadeKey)!;
-
             registro.dentro += item.dentroPrazo;
             registro.fora += item.foraPrazo;
             registro.total += item.totalExecucoes;
@@ -368,40 +237,22 @@ export default function Desembaraco() {
         return Array.from(agrupado.values())
             .map((item) => ({
                 ...item,
-                nome:
-                    item.atividade.length > 34
-                        ? `${item.atividade.slice(0, 34)}...`
-                        : item.atividade,
-                aderencia:
-                    item.total > 0
-                        ? (item.dentro / item.total) * 100
-                        : 0,
+                nome: item.atividade.length > 34
+                    ? `${item.atividade.slice(0, 34)}...`
+                    : item.atividade,
+                aderencia: item.total > 0 ? (item.dentro / item.total) * 100 : 0,
             }))
             .sort((a, b) => a.aderencia - b.aderencia);
     }, [resultadosFiltrados]);
 
     // Volume por modal
     const dadosModal = useMemo(() => {
-        return modais
-            .filter(
-                (item) => modal === "todos" || item === modal
-            )
+        return MODAIS
+            .filter((item) => modal === "todos" || item === modal)
             .map((item) => {
-                const registros = resultadosFiltrados.filter(
-                    (resultado) => resultado.modal === item
-                );
-
-                const total = registros.reduce(
-                    (soma, registro) =>
-                        soma + registro.totalExecucoes,
-                    0
-                );
-
-                const dentro = registros.reduce(
-                    (soma, registro) =>
-                        soma + registro.dentroPrazo,
-                    0
-                );
+                const registros = resultadosFiltrados.filter((resultado) => resultado.modal === item);
+                const total = registros.reduce((soma, registro) => soma + registro.totalExecucoes, 0);
+                const dentro = registros.reduce((soma, registro) => soma + registro.dentroPrazo, 0);
 
                 return {
                     modal: nomeModal(item),
@@ -418,18 +269,12 @@ export default function Desembaraco() {
         { nome: "Fora do SLA", valor: resumo.fora },
     ].filter((item) => item.valor > 0);
 
-    const unidadeLabel =
-        unidade === "guarulhos"
-            ? "Guarulhos"
-            : "Santa Catarina";
+    const unidadeLabel = unidade === "guarulhos" ? "Guarulhos" : "Santa Catarina";
 
     if (carregando) {
         return (
             <div className="flex min-h-[60vh] items-center justify-center text-gray-400">
-                <RefreshCw
-                    className="mr-3 animate-spin"
-                    size={20}
-                />
+                <RefreshCw className="mr-3 animate-spin" size={20} />
                 Carregando Desembaraço Aduaneiro...
             </div>
         );
@@ -452,26 +297,17 @@ export default function Desembaraco() {
                         <Ship size={16} />
                         <span>Etapas 6 e 7 • Operação Internacional</span>
                     </div>
-
                     <h1 className="text-2xl font-bold text-white">
                         Desembaraço Aduaneiro e Pós-desembaraço
                     </h1>
-
                     <p className="mt-2 text-sm text-gray-400">
-                        Monitoramento das atividades de desembaraço aduaneiro,
-                        gestão de exigências, acompanhamento da parametrização,
-                        liberação da carga e processos de pós-desembaraço.
+                        Monitoramento das atividades de desembaraço aduaneiro, gestão de exigências,
+                        acompanhamento da parametrização, liberação da carga e processos de pós-desembaraço.
                     </p>
                 </div>
-
                 <div className="rounded-lg border border-[#292B34] bg-[#181920] px-4 py-2">
-                    <p className="text-xs text-gray-500">
-                        Unidade selecionada
-                    </p>
-
-                    <p className="font-semibold text-white">
-                        {unidadeLabel}
-                    </p>
+                    <p className="text-xs text-gray-500">Unidade selecionada</p>
+                    <p className="font-semibold text-white">{unidadeLabel}</p>
                 </div>
             </div>
 
@@ -482,46 +318,31 @@ export default function Desembaraco() {
                         <CalendarDays size={14} />
                         Data inicial
                     </label>
-
                     <input
                         type="date"
                         value={dataInicio}
-                        onChange={(event) =>
-                            setDataInicio(event.target.value)
-                        }
+                        onChange={(event) => setDataInicio(event.target.value)}
                         className="w-full rounded-lg border border-[#292B34] bg-[#101116] px-3 py-2 text-sm text-white outline-none focus:border-green-500"
                     />
                 </div>
-
                 <div>
                     <label className="mb-2 flex items-center gap-2 text-xs text-gray-400">
                         <CalendarDays size={14} />
                         Data final
                     </label>
-
                     <input
                         type="date"
                         value={dataFim}
                         min={dataInicio}
-                        onChange={(event) =>
-                            setDataFim(event.target.value)
-                        }
+                        onChange={(event) => setDataFim(event.target.value)}
                         className="w-full rounded-lg border border-[#292B34] bg-[#101116] px-3 py-2 text-sm text-white outline-none focus:border-green-500"
                     />
                 </div>
-
                 <div>
-                    <label className="mb-2 block text-xs text-gray-400">
-                        Modal de transporte
-                    </label>
-
+                    <label className="mb-2 block text-xs text-gray-400">Modal de transporte</label>
                     <select
                         value={modal}
-                        onChange={(event) =>
-                            setModal(
-                                event.target.value as ModalFiltro
-                            )
-                        }
+                        onChange={(event) => setModal(event.target.value as ModalFiltro)}
                         className="w-full rounded-lg border border-[#292B34] bg-[#101116] px-3 py-2 text-sm text-white outline-none focus:border-green-500"
                     >
                         <option value="todos">Todos os modais</option>
@@ -541,7 +362,6 @@ export default function Desembaraco() {
                     icone={<Ship size={21} />}
                     cor={CORES.azul}
                 />
-
                 <CardIndicador
                     titulo="Dentro do SLA"
                     valor={resumo.dentro}
@@ -549,7 +369,6 @@ export default function Desembaraco() {
                     icone={<CheckCircle2 size={21} />}
                     cor={CORES.verde}
                 />
-
                 <CardIndicador
                     titulo="Fora do SLA"
                     valor={resumo.fora}
@@ -557,13 +376,10 @@ export default function Desembaraco() {
                     icone={<AlertTriangle size={21} />}
                     cor={CORES.vermelho}
                 />
-
                 <CardIndicador
                     titulo="Aderência ao SLA"
                     valor={formatarPercentual(resumo.aderencia)}
-                    descricao={`Tempo médio: ${formatarHoras(
-                        resumo.tempoMedio
-                    )}`}
+                    descricao={`Tempo médio: ${formatarHoras(resumo.tempoMedio)}`}
                     icone={<Clock3 size={21} />}
                     cor={CORES.amarelo}
                 />
@@ -578,27 +394,14 @@ export default function Desembaraco() {
                     {dadosMensais.length > 0 ? (
                         <ResponsiveContainer width="100%" height={280}>
                             <LineChart data={dadosMensais}>
-                                <CartesianGrid
-                                    stroke="#292B34"
-                                    strokeDasharray="3 3"
-                                    vertical={false}
-                                />
-
-                                <XAxis
-                                    dataKey="mes"
-                                    stroke="#9CA3AF"
-                                    tick={{ fontSize: 11 }}
-                                />
-
+                                <CartesianGrid stroke="#292B34" strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="mes" stroke="#9CA3AF" tick={{ fontSize: 11 }} />
                                 <YAxis
                                     domain={[0, 100]}
                                     stroke="#9CA3AF"
                                     tick={{ fontSize: 11 }}
-                                    tickFormatter={(valor) =>
-                                        `${valor}%`
-                                    }
+                                    tickFormatter={(valor) => `${valor}%`}
                                 />
-
                                 <Tooltip
                                     contentStyle={{
                                         backgroundColor: "#181920",
@@ -606,22 +409,15 @@ export default function Desembaraco() {
                                         borderRadius: 8,
                                         color: "#fff",
                                     }}
-                                    formatter={(valor) => [
-                                        `${Number(valor).toFixed(1)}%`,
-                                        "Aderência",
-                                    ]}
+                                    formatter={(valor) => [`${Number(valor).toFixed(1)}%`, "Aderência"]}
                                 />
-
                                 <Line
                                     type="monotone"
                                     dataKey="aderencia"
                                     name="Aderência"
                                     stroke={CORES.verde}
                                     strokeWidth={3}
-                                    dot={{
-                                        r: 4,
-                                        fill: CORES.verde,
-                                    }}
+                                    dot={{ r: 4, fill: CORES.verde }}
                                     activeDot={{ r: 6 }}
                                 />
                             </LineChart>
@@ -639,10 +435,7 @@ export default function Desembaraco() {
                 >
                     {dadosPizza.length > 0 ? (
                         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                            <ResponsiveContainer
-                                width="100%"
-                                height={250}
-                            >
+                            <ResponsiveContainer width="100%" height={250}>
                                 <PieChart>
                                     <Pie
                                         data={dadosPizza}
@@ -654,18 +447,10 @@ export default function Desembaraco() {
                                         outerRadius={95}
                                         paddingAngle={4}
                                     >
-                                        {dadosPizza.map(
-                                            (item, index) => (
-                                                <Cell
-                                                    key={item.nome}
-                                                    fill={
-                                                        CORES_GRAFICO[index]
-                                                    }
-                                                />
-                                            )
-                                        )}
+                                        {dadosPizza.map((item, index) => (
+                                            <Cell key={item.nome} fill={CORES_GRAFICO[index]} />
+                                        ))}
                                     </Pie>
-
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: "#181920",
@@ -676,29 +461,16 @@ export default function Desembaraco() {
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
-
                             <div className="space-y-4">
                                 {dadosPizza.map((item, index) => (
-                                    <div
-                                        key={item.nome}
-                                        className="flex items-center gap-3"
-                                    >
+                                    <div key={item.nome} className="flex items-center gap-3">
                                         <span
                                             className="h-3 w-3 rounded-full"
-                                            style={{
-                                                backgroundColor:
-                                                    CORES_GRAFICO[index],
-                                            }}
+                                            style={{ backgroundColor: CORES_GRAFICO[index] }}
                                         />
-
                                         <div>
-                                            <p className="text-sm text-gray-300">
-                                                {item.nome}
-                                            </p>
-
-                                            <p className="font-semibold text-white">
-                                                {item.valor} execuções
-                                            </p>
+                                            <p className="text-sm text-gray-300">{item.nome}</p>
+                                            <p className="font-semibold text-white">{item.valor} execuções</p>
                                         </div>
                                     </div>
                                 ))}
@@ -718,39 +490,20 @@ export default function Desembaraco() {
                 descricao="Identifique quais atividades apresentam maior volume de desvios"
             >
                 {dadosAtividades.length > 0 ? (
-                    <ResponsiveContainer
-                        width="100%"
-                        height={Math.max(
-                            280,
-                            dadosAtividades.length * 58
-                        )}
-                    >
+                    <ResponsiveContainer width="100%" height={Math.max(280, dadosAtividades.length * 58)}>
                         <BarChart
                             data={dadosAtividades}
                             layout="vertical"
-                            margin={{
-                                top: 5,
-                                right: 25,
-                                left: 10,
-                                bottom: 5,
-                            }}
+                            margin={{ top: 5, right: 25, left: 10, bottom: 5 }}
                         >
-                            <CartesianGrid
-                                stroke="#292B34"
-                                strokeDasharray="3 3"
-                                horizontal={false}
-                            />
-
+                            <CartesianGrid stroke="#292B34" strokeDasharray="3 3" horizontal={false} />
                             <XAxis
                                 type="number"
                                 domain={[0, 100]}
                                 stroke="#9CA3AF"
                                 tick={{ fontSize: 11 }}
-                                tickFormatter={(valor) =>
-                                    `${valor}%`
-                                }
+                                tickFormatter={(valor) => `${valor}%`}
                             />
-
                             <YAxis
                                 type="category"
                                 dataKey="nome"
@@ -758,7 +511,6 @@ export default function Desembaraco() {
                                 stroke="#9CA3AF"
                                 tick={{ fontSize: 10 }}
                             />
-
                             <Tooltip
                                 contentStyle={{
                                     backgroundColor: "#181920",
@@ -766,17 +518,9 @@ export default function Desembaraco() {
                                     borderRadius: 8,
                                     color: "#fff",
                                 }}
-                                formatter={(valor) => [
-                                    `${Number(valor).toFixed(1)}%`,
-                                    "Aderência",
-                                ]}
+                                formatter={(valor) => [`${Number(valor).toFixed(1)}%`, "Aderência"]}
                             />
-
-                            <Bar
-                                dataKey="aderencia"
-                                name="Aderência"
-                                radius={[0, 5, 5, 0]}
-                            >
+                            <Bar dataKey="aderencia" name="Aderência" radius={[0, 5, 5, 0]}>
                                 {dadosAtividades.map((item) => (
                                     <Cell
                                         key={item.atividadeKey}
@@ -807,23 +551,9 @@ export default function Desembaraco() {
                 {dadosModal.length > 0 ? (
                     <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={dadosModal}>
-                            <CartesianGrid
-                                stroke="#292B34"
-                                strokeDasharray="3 3"
-                                vertical={false}
-                            />
-
-                            <XAxis
-                                dataKey="modal"
-                                stroke="#9CA3AF"
-                                tick={{ fontSize: 11 }}
-                            />
-
-                            <YAxis
-                                stroke="#9CA3AF"
-                                tick={{ fontSize: 11 }}
-                            />
-
+                            <CartesianGrid stroke="#292B34" strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="modal" stroke="#9CA3AF" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#9CA3AF" tick={{ fontSize: 11 }} />
                             <Tooltip
                                 contentStyle={{
                                     backgroundColor: "#181920",
@@ -832,16 +562,8 @@ export default function Desembaraco() {
                                     color: "#fff",
                                 }}
                             />
-
                             <Legend />
-
-                            <Bar
-                                dataKey="dentro"
-                                name="Dentro do SLA"
-                                stackId="a"
-                                fill={CORES.verde}
-                            />
-
+                            <Bar dataKey="dentro" name="Dentro do SLA" stackId="a" fill={CORES.verde} />
                             <Bar
                                 dataKey="fora"
                                 name="Fora do SLA"
@@ -867,54 +589,30 @@ export default function Desembaraco() {
                     <div className="space-y-6">
                         {dadosAtividades.map((atividade) => {
                             const dadosAtividade = resultadosFiltrados
-                                .filter(
-                                    (item) =>
-                                        item.atividadeKey ===
-                                        atividade.atividadeKey
-                                )
-                                .reduce(
-                                    (acumulado, item) => {
-                                        const chave = `${item.ano}-${String(
-                                            item.mes
-                                        ).padStart(2, "0")}`;
+                                .filter((item) => item.atividadeKey === atividade.atividadeKey)
+                                .reduce((acumulado, item) => {
+                                    const chave = `${item.ano}-${String(item.mes).padStart(2, "0")}`;
 
-                                        if (!acumulado[chave]) {
-                                            acumulado[chave] = {
-                                                mes: `${MESES[
-                                                    item.mes - 1
-                                                ].slice(0, 3)}/${String(
-                                                    item.ano
-                                                ).slice(-2)}`,
-                                                ordem:
-                                                    item.ano * 100 +
-                                                    item.mes,
-                                                dentro: 0,
-                                                fora: 0,
-                                            };
-                                        }
+                                    if (!acumulado[chave]) {
+                                        acumulado[chave] = {
+                                            mes: `${MESES[item.mes - 1].slice(0, 3)}/${String(item.ano).slice(-2)}`,
+                                            ordem: item.ano * 100 + item.mes,
+                                            dentro: 0,
+                                            fora: 0,
+                                        };
+                                    }
 
-                                        acumulado[chave].dentro +=
-                                            item.dentroPrazo;
+                                    acumulado[chave].dentro += item.dentroPrazo;
+                                    acumulado[chave].fora += item.foraPrazo;
+                                    return acumulado;
+                                }, {} as Record<string, {
+                                    mes: string;
+                                    ordem: number;
+                                    dentro: number;
+                                    fora: number;
+                                }>);
 
-                                        acumulado[chave].fora +=
-                                            item.foraPrazo;
-
-                                        return acumulado;
-                                    },
-                                    {} as Record<
-                                        string,
-                                        {
-                                            mes: string;
-                                            ordem: number;
-                                            dentro: number;
-                                            fora: number;
-                                        }
-                                    >
-                                );
-
-                            const dados = Object.values(
-                                dadosAtividade
-                            ).sort((a, b) => a.ordem - b.ordem);
+                            const dados = Object.values(dadosAtividade).sort((a, b) => a.ordem - b.ordem);
 
                             return (
                                 <div
@@ -922,89 +620,43 @@ export default function Desembaraco() {
                                     className="border-b border-[#292B34] pb-6 last:border-0 last:pb-0"
                                 >
                                     <div className="mb-3">
-                                        <h4 className="text-sm font-medium text-white">
-                                            {atividade.atividade}
-                                        </h4>
-
+                                        <h4 className="text-sm font-medium text-white">{atividade.atividade}</h4>
                                         <p className="mt-1 text-xs text-gray-500">
-                                            Quantidade de execuções dentro
-                                            e fora do SLA por mês
+                                            Quantidade de execuções dentro e fora do SLA por mês
                                         </p>
                                     </div>
-
-                                    <ResponsiveContainer
-                                        width="100%"
-                                        height={250}
-                                    >
+                                    <ResponsiveContainer width="100%" height={250}>
                                         <BarChart
                                             data={dados}
-                                            margin={{
-                                                top: 10,
-                                                right: 20,
-                                                left: 0,
-                                                bottom: 5,
-                                            }}
+                                            margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
                                             barGap={8}
                                         >
-                                            <CartesianGrid
-                                                strokeDasharray="3 3"
-                                                stroke="#292B34"
-                                                vertical={false}
-                                            />
-
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#292B34" vertical={false} />
                                             <XAxis
                                                 dataKey="mes"
                                                 stroke="#9CA3AF"
-                                                tick={{
-                                                    fill: "#9CA3AF",
-                                                    fontSize: 12,
-                                                }}
+                                                tick={{ fill: "#9CA3AF", fontSize: 12 }}
                                                 axisLine={false}
                                                 tickLine={false}
                                             />
-
                                             <YAxis
                                                 stroke="#9CA3AF"
-                                                tick={{
-                                                    fill: "#9CA3AF",
-                                                    fontSize: 12,
-                                                }}
+                                                tick={{ fill: "#9CA3AF", fontSize: 12 }}
                                                 axisLine={false}
                                                 tickLine={false}
                                                 allowDecimals={false}
                                             />
-
                                             <Tooltip
                                                 contentStyle={{
-                                                    backgroundColor:
-                                                        "#181920",
-                                                    border:
-                                                        "1px solid #292B34",
+                                                    backgroundColor: "#181920",
+                                                    border: "1px solid #292B34",
                                                     borderRadius: 8,
                                                     color: "#FFFFFF",
                                                 }}
                                             />
-
-                                            <Legend
-                                                wrapperStyle={{
-                                                    color: "#9CA3AF",
-                                                    fontSize: "12px",
-                                                }}
-                                            />
-
-                                            <Bar
-                                                dataKey="dentro"
-                                                name="Dentro do SLA"
-                                                fill={CORES.verde}
-                                                radius={[4, 4, 0, 0]}
-                                            />
-
-                                            <Bar
-                                                dataKey="fora"
-                                                name="Fora do SLA"
-                                                fill={CORES.vermelho}
-                                                radius={[4, 4, 0, 0]}
-                                            />
+                                            <Legend wrapperStyle={{ color: "#9CA3AF", fontSize: "12px" }} />
+                                            <Bar dataKey="dentro" name="Dentro do SLA" fill={CORES.verde} radius={[4, 4, 0, 0]} />
+                                            <Bar dataKey="fora" name="Fora do SLA" fill={CORES.vermelho} radius={[4, 4, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -1018,19 +670,31 @@ export default function Desembaraco() {
                 )}
             </CardGrafico>
 
+            {/* Detalhamento individual das execuções */}
+            <div className="space-y-3">
+                <div>
+                    <h2 className="text-lg font-semibold text-white">Detalhamento das execuções</h2>
+                    <p className="text-sm text-gray-400">
+                        Consulte individualmente os processos dentro e fora do SLA.
+                    </p>
+                </div>
+                <TabelaAnalitica
+                    atividades={atividades}
+                    execucoes={execucoes}
+                    dataInicio={dataInicio}
+                    dataFim={dataFim}
+                    modal={modal}
+                />
+            </div>
+
             {/* Observação */}
             <div className="rounded-xl border border-[#292B34] bg-[#181920] p-4">
                 <p className="text-xs leading-relaxed text-gray-400">
-                    <strong className="text-gray-300">
-                        Critério provisório de SLA:
-                    </strong>{" "}
-                    as atividades são consideradas dentro do prazo
-                    quando a duração entre o início e a conclusão
-                    da execução é menor ou igual ao target definido
-                    para o modal. Os critérios operacionais de
-                    desembaraço aduaneiro, atendimento de exigências,
-                    liberação da carga e pós-desembaraço serão
-                    revisados na etapa de validação das regras.
+                    <strong className="text-gray-300">Critério provisório de SLA:</strong>{" "}
+                    as atividades são consideradas dentro do prazo quando a duração entre o início
+                    e a conclusão da execução é menor ou igual ao target definido para o modal.
+                    Os critérios operacionais de desembaraço aduaneiro, atendimento de exigências,
+                    liberação da carga e pós-desembaraço serão revisados na etapa de validação das regras.
                 </p>
             </div>
         </div>

@@ -13,6 +13,7 @@ import { calcularKPIsPorPeriodo } from "../utils/kpiPlanejamento";
 
 import { BarChart } from "../charts/BarChart";
 import { PieChart } from "../charts/PieChart";
+import TabelaAnalitica from "../layout/TabelaAnalitica";
 
 const unidadesValidas: Unidade[] = [
     "guarulhos",
@@ -532,6 +533,17 @@ export default function Planejamento() {
                                     );
                                 })}
                             </section>
+                           
+                            <TabelaAnalitica
+                                atividades={atividades}
+                                execucoes={execucoesTeste.filter(
+                                    (execucao) => execucao.unidade === unidade
+                                )}
+                                dataInicio={dataInicio}
+                                dataFim={dataFim}
+                                modal={modal}
+                            />
+
 
                             <p className="text-right text-xs text-gray-500">
                                 {formatarNumero(resumo.totalExecucoes)} execuções no período

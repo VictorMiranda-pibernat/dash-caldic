@@ -10,6 +10,7 @@ import type {
 import { usePlanejamento } from "../../hooks/usePlanejamento";
 import { gerarExecucoesGestao } from "../data/mock/gerarExecucoesGestao";
 import { calcularKPIsPorPeriodo } from "../utils/kpiPlanejamento";
+import TabelaAnalitica from "../layout/TabelaAnalitica";
 
 import { BarChart } from "../charts/BarChart";
 import { PieChart } from "../charts/PieChart";
@@ -60,7 +61,7 @@ export default function GestaoPreEmbarque() {
                     (atividade) =>
                         atividade.etapa.trim().startsWith("2.")
                 );
-                
+
                 if (ativo) {
                     setAtividades(atividadesGestao);
                 }
@@ -513,6 +514,15 @@ export default function GestaoPreEmbarque() {
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* TABELA ANALÍTICA DE PROCESSOS */}
+                                <TabelaAnalitica
+                                    atividades={atividades}
+                                    execucoes={execucoes}
+                                    dataInicio={dataInicio}
+                                    dataFim={dataFim}
+                                    modal={modal}
+                                />
                             </section>
 
                             <p className="text-right text-xs text-gray-500">
